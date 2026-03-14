@@ -1,0 +1,14 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+.github/**
+.ai/**
+.gitignore
+.eslintrc.json
+.prettierrc
+tsconfig.json
+**/*.ts
+!out/**/*.js
+node_modules/**
+package-lock.json

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, 'claude/**']
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Run unit tests
+        run: xvfb-run -a npm test
+        continue-on-error: true
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Package extension
+        run: npx vsce package --no-dependencies
+        continue-on-error: true
+
+      - name: Upload VSIX artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-bridge-vsix
+          path: '*.vsix'
+          retention-days: 7

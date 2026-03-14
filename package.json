@@ -1,0 +1,296 @@
+{
+  "name": "codebreeze",
+  "displayName": "CodeBreeze",
+  "description": "Automate code transfer between AI chats (Genspark, ChatGPT, etc.) and VS Code via clipboard",
+  "version": "0.1.0",
+  "publisher": "station-sage",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ai",
+    "clipboard",
+    "code",
+    "genspark",
+    "chatgpt",
+    "automation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Station-Sage/CodeBreeze"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codebreeze.applyFromClipboard",
+        "title": "Apply Code from Clipboard",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyFileForAI",
+        "title": "Copy File for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copySelectionForAI",
+        "title": "Copy Selection for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyGitDiffForAI",
+        "title": "Copy Git Diff for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyGitLogForAI",
+        "title": "Copy Git Log for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyErrorsForAI",
+        "title": "Copy Errors for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyBuildLogFromGitHub",
+        "title": "Copy Build Log from GitHub",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.runBuildAndCopy",
+        "title": "Run Build and Copy Log",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.runTestAndCopy",
+        "title": "Run Test and Copy Log",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyLastBuildLog",
+        "title": "Copy Last Build Log",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copySmartContext",
+        "title": "Copy Smart Context for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.undoLastApply",
+        "title": "Undo Last Apply",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.openChatPanel",
+        "title": "Open AI Chat",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.openControlPanel",
+        "title": "Open CodeBreeze Control Panel",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.refreshSidebar",
+        "title": "Refresh",
+        "category": "CodeBreeze",
+        "icon": "$(refresh)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "codebreeze.applyFromClipboard",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "codebreeze.copyFileForAI",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorFocus"
+      },
+      {
+        "command": "codebreeze.openControlPanel",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codebreeze",
+          "title": "CodeBreeze",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "codebreeze": [
+        {
+          "id": "codebreezeSidebar",
+          "name": "CodeBreeze",
+          "type": "tree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "codebreeze.refreshSidebar",
+          "when": "view == codebreezeSidebar",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "codebreeze.copyFileForAI",
+          "group": "codebreeze@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "codebreeze.copySelectionForAI",
+          "group": "codebreeze@1",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "codebreeze.copyFileForAI",
+          "group": "codebreeze@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CodeBreeze",
+      "properties": {
+        "codebreeze.filePathPattern": {
+          "type": "string",
+          "default": "",
+          "description": "Custom regex pattern for extracting file paths from code block headers (leave empty to use default)"
+        },
+        "codebreeze.sourceRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Default source root path within the workspace (e.g. 'src')"
+        },
+        "codebreeze.gitDiffMode": {
+          "type": "string",
+          "enum": [
+            "staged",
+            "unstaged",
+            "both"
+          ],
+          "default": "unstaged",
+          "description": "Default git diff mode"
+        },
+        "codebreeze.githubToken": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub Personal Access Token for fetching remote build logs (optional, local builds are preferred)"
+        },
+        "codebreeze.githubRepo": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub repository in owner/repo format (e.g. 'octocat/hello-world')"
+        },
+        "codebreeze.contextLines": {
+          "type": "number",
+          "default": 15,
+          "description": "Number of lines to include around error locations when copying context"
+        },
+        "codebreeze.chunkMaxLines": {
+          "type": "number",
+          "default": 200,
+          "description": "Maximum lines per chunk when splitting large files"
+        },
+        "codebreeze.watchClipboard": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show notification when clipboard contains code blocks"
+        },
+        "codebreeze.gitLogCount": {
+          "type": "number",
+          "default": 10,
+          "description": "Number of recent git log entries to include"
+        },
+        "codebreeze.buildCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm run build"
+          ],
+          "description": "Local build commands to run (first one is used by default)"
+        },
+        "codebreeze.testCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm test"
+          ],
+          "description": "Local test commands to run (first one is used by default)"
+        },
+        "codebreeze.chatUrl": {
+          "type": "string",
+          "default": "https://www.genspark.ai/agents?type=ai_chat",
+          "description": "URL to open for AI chat (used by Open AI Chat command)"
+        },
+        "codebreeze.autoLevel": {
+          "type": "string",
+          "enum": [
+            "off",
+            "notify",
+            "auto"
+          ],
+          "default": "notify",
+          "description": "Automation level: off=manual only, notify=show notification on events, auto=update panel automatically"
+        },
+        "codebreeze.autoWatchClipboard": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically watch clipboard for code blocks when control panel is open"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTests.js",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "diff": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/diff": "^5.0.9",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.0.0",
+    "eslint": "^8.0.0",
+    "mocha": "^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}
