@@ -2,4 +2,9 @@
 
 changelog.md에서 3건 초과 시 이곳으로 이동.
 
-(아직 아카이브 항목 없음)
+### 2026-03-15 — v0.1.0 초기 버전
+- VS Code 확장 스캐폴딩, 15개 명령, 사이드바, 모니터
+- Apply: 클립보드 → 마크다운 파싱 → 파일 적용 + safetyGuard
+- Collect: 파일/git/에러/빌드/스마트 컨텍스트 → 클립보드
+- UI: 사이드바 트리, 컨트롤 패널 WebView, 상태바
+- 문서: AGENTS.md, CLAUDE.md, BUGS.md, .ai/ 구조
