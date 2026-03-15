@@ -127,12 +127,34 @@
         "command": "codebreeze.openControlPanel",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i"
+      },
+      {
+        "command": "codebreeze.copySmartContext",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s"
+      },
+      {
+        "command": "codebreeze.openChatPanel",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h"
+      },
+      {
+        "command": "codebreeze.undoLastApply",
+        "key": "ctrl+shift+u",
+        "mac": "cmd+shift+u"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "codebreeze",
+          "title": "CodeBreeze",
+          "icon": "resources/icon.svg"
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "codebreeze-chat",
           "title": "CodeBreeze",
           "icon": "resources/icon.svg"
         }
@@ -144,6 +166,13 @@
           "id": "codebreezeSidebar",
           "name": "CodeBreeze",
           "type": "tree"
+        }
+      ],
+      "codebreeze-chat": [
+        {
+          "id": "codebreezePanelView",
+          "name": "CodeBreeze",
+          "type": "webview"
         }
       ]
     },

@@ -16,7 +16,7 @@ import { copySmartContext } from './collect/smartContext';
 import { CodeBreezeSidebarProvider } from './ui/sidebarProvider';
 import { initHistoryStore } from './ui/historyStore';
 import { initStatusBar, flashStatusBar } from './ui/statusBarItem';
-import { openChatPanel, openControlPanel } from './ui/chatPanel';
+import { openChatPanel, openControlPanel, CodebreezeWebviewViewProvider, isAutoWatchEnabled, setAutoWatch } from './ui/chatPanel';
 
 // Monitor
 import { registerTaskMonitor } from './monitor/taskMonitor';
@@ -36,6 +36,14 @@ export function activate(context: vscode.ExtensionContext): void {
     sidebarProvider
   );
   context.subscriptions.push(sidebarDisposable);
+
+  // Register secondary sidebar WebviewView provider
+  const panelProvider = new CodebreezeWebviewViewProvider(context);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('codebreezePanelView', panelProvider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    })
+  );
 
   // Register monitors
   registerTaskMonitor(context);
@@ -69,6 +77,10 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.openChatPanel', () => openChatPanel()],
     ['codebreeze.openControlPanel', () => openControlPanel(context)],
     ['codebreeze.refreshSidebar', () => sidebarProvider.refresh()],
+    ['codebreeze.toggleAutoWatch', () => {
+      setAutoWatch(!isAutoWatchEnabled());
+      sidebarProvider.refresh();
+    }],
   ];
 
   for (const [id, handler] of commands) {
