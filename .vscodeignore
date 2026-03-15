@@ -3,11 +3,12 @@
 src/**
 test/**
 .github/**
+.ai/**
 .gitignore
 .eslintrc.json
 .prettierrc
 tsconfig.json
-**/*.map
 **/*.ts
-!out/**
+!out/**/*.js
 node_modules/**
+package-lock.json
