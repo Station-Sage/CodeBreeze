@@ -137,11 +137,12 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
 
 export async function openChatPanel(): Promise<void> {
   const config = getConfig();
-  vscode.commands.executeCommand('simpleBrowser.show', config.chatUrl);
+  await vscode.env.openExternal(vscode.Uri.parse(config.chatUrl));
 }
 
-export function openControlPanel(_context: vscode.ExtensionContext): void {
-  vscode.commands.executeCommand('codebreezePanelView.focus');
+export async function openControlPanel(_context: vscode.ExtensionContext): Promise<void> {
+  await vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
+  await vscode.commands.executeCommand('codebreezePanelView.focus');
 }
 
 async function refreshClipboardBlocks(): Promise<void> {
@@ -186,6 +187,7 @@ function startClipboardWatch(): void {
             )
             .then((choice) => {
               if (choice === 'Open Panel') {
+                vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
                 vscode.commands.executeCommand('codebreezePanelView.focus');
               }
             });
