@@ -19,7 +19,6 @@
     "chatgpt",
     "automation"
   ],
-  "icon": "resources/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/Station-Sage/Clip_Copy"
