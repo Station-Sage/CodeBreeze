@@ -6,6 +6,11 @@
 - [x] 단위테스트 45개 작성 및 CI 통과 (markdownParser, diffDetector, markdownUtils, types)
 - [x] CI에 xvfb-run npm test 단계 추가
 - [x] VSIX 패키징 오류 수정 (icon.png 참조 제거, main 경로 수정)
+- [x] Collect 흐름 완성: 모든 collect/ 모듈 구현 확인 및 lint 경고 0 달성 — 2026-03-15
+- [x] gitEventMonitor prevCommit 활용한 실제 commit 감지 구현 — 2026-03-15
+- [x] copyMultipleFilesForAI 커맨드 등록 (explorer/context 다중 선택 메뉴 포함) — 2026-03-15
+- [x] GitHub Actions 로그: public 레포 토큰 없이 조회 지원 — 2026-03-15
+- [x] 신규 테스트 10개 추가 (collectUtils.test.ts) — 2026-03-15
 
 ## 우선 — 핵심 기능 검증
 - [ ] Apply 흐름 E2E 테스트: 마크다운 코드 블록 복사 → Ctrl+Shift+A → 파일 적용
@@ -17,7 +22,7 @@
 - [ ] 에러 경로 처리: 빈 클립보드, 코드 블록 없는 텍스트, 파일 경로 매칭 실패
 - [ ] safetyGuard: git stash → apply → undo 전체 흐름 검증
 - [ ] localBuildCollector: 다양한 빌드 도구 에러 포맷 파싱
-- [ ] lint warning 8개 정리 (미사용 변수)
+- [x] lint warning 8개 정리 (미사용 변수) — 2026-03-15 완료
 
 ## 미구현 개선사항
 - I-001: code-server 클립보드 폴백
