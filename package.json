@@ -353,8 +353,11 @@
     "package": "vsce package"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@types/ws": "^8.18.1",
     "adm-zip": "^0.5.10",
-    "diff": "^5.1.0"
+    "diff": "^5.1.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",

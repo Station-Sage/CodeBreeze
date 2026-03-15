@@ -1,16 +1,24 @@
 /**
  * MCP (Model Context Protocol) server mode — Phase 3
  *
- * Exposes a local HTTP server that AI agents can call directly,
+ * Exposes a local HTTP server using the official @modelcontextprotocol/sdk.
+ * AI agents (Claude Desktop, Cursor, Genspark MCP etc.) can call tools directly,
  * eliminating clipboard copy-paste entirely.
  *
- * Protocol: JSON-RPC 2.0 over HTTP POST /mcp
+ * Protocol: MCP over Streamable HTTP (JSON-RPC 2.0 compatible)
  * Default port: 3700 (configurable via codebreeze.mcpPort setting)
+ *
+ * Tools exposed:
+ *   read_file, write_file, get_errors, get_git_diff, get_git_log,
+ *   run_build, get_project_map, apply_code, list_files
  */
 import * as http from 'http';
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { z } from 'zod';
 import { getWorkspaceRoot } from '../config';
 import { getDiagnosticsMarkdown } from '../collect/errorCollector';
 import { getGitDiff, getGitLog, getCurrentBranch } from '../collect/gitCollector';
@@ -19,114 +27,23 @@ import { getProjectMap } from '../collect/projectMapCollector';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { parseClipboard } from '../apply/markdownParser';
 
+// ── Server state ──────────────────────────────────────────────────────────
 
-// ── Types ──────────────────────────────────────────────────────────────────
+let httpServer: http.Server | undefined;
+let statusBarMcpItem: vscode.StatusBarItem | undefined;
 
-interface JsonRpcRequest {
-  jsonrpc: '2.0';
-  id: string | number | null;
-  method: string;
-  params?: unknown;
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+export function getMcpPort(): number {
+  const cfg = vscode.workspace.getConfiguration('codebreeze');
+  return cfg.get<number>('mcpPort') ?? 3700;
 }
 
-interface JsonRpcResponse {
-  jsonrpc: '2.0';
-  id: string | number | null;
-  result?: unknown;
-  error?: { code: number; message: string; data?: unknown };
+export function isMcpRunning(): boolean {
+  return !!httpServer;
 }
 
-// ── Tool definitions ──────────────────────────────────────────────────────
-
-const TOOLS = [
-  {
-    name: 'read_file',
-    description: 'Read a file from the VS Code workspace',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Relative file path within workspace' },
-      },
-      required: ['path'],
-    },
-  },
-  {
-    name: 'write_file',
-    description: 'Write content to a workspace file (creates if not exists)',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Relative file path' },
-        content: { type: 'string', description: 'File content' },
-      },
-      required: ['path', 'content'],
-    },
-  },
-  {
-    name: 'get_errors',
-    description: 'Get current compilation/lint errors from VS Code diagnostics',
-    inputSchema: { type: 'object', properties: {} },
-  },
-  {
-    name: 'get_git_diff',
-    description: 'Get git diff for current workspace',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        mode: {
-          type: 'string',
-          enum: ['unstaged', 'staged', 'head'],
-          description: 'Diff mode (default: unstaged)',
-        },
-      },
-    },
-  },
-  {
-    name: 'get_git_log',
-    description: 'Get recent git commit log',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        count: { type: 'number', description: 'Number of commits (default: 10)' },
-      },
-    },
-  },
-  {
-    name: 'run_build',
-    description: 'Retrieve the last build result (does not re-trigger build)',
-    inputSchema: { type: 'object', properties: {} },
-  },
-  {
-    name: 'get_project_map',
-    description: 'Get a map of project files with their exported symbols',
-    inputSchema: { type: 'object', properties: {} },
-  },
-  {
-    name: 'apply_code',
-    description: 'Apply markdown code blocks (same as Ctrl+Shift+A). Pass markdown with fenced code blocks.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        markdown: { type: 'string', description: 'Markdown text containing fenced code blocks' },
-      },
-      required: ['markdown'],
-    },
-  },
-  {
-    name: 'list_files',
-    description: 'List files in a workspace directory',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        dir: { type: 'string', description: 'Relative directory path (default: workspace root)' },
-        recursive: { type: 'boolean', description: 'Recurse into subdirectories (default: false)' },
-      },
-    },
-  },
-];
-
-// ── Tool handlers ─────────────────────────────────────────────────────────
-
+/** Shared tool business logic — reused by all tool registrations */
 async function callTool(name: string, params: Record<string, unknown>): Promise<unknown> {
   const root = getWorkspaceRoot();
 
@@ -148,10 +65,9 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
       if (!absPath.startsWith(root)) throw new Error('Path outside workspace');
       fs.mkdirSync(path.dirname(absPath), { recursive: true });
       fs.writeFileSync(absPath, content, 'utf8');
-      // Notify VS Code about the file change
-      vscode.workspace.openTextDocument(absPath).then((doc) =>
-        vscode.window.showTextDocument(doc, { preview: true, preserveFocus: true })
-      );
+      vscode.workspace
+        .openTextDocument(absPath)
+        .then((doc) => vscode.window.showTextDocument(doc, { preview: true, preserveFocus: true }));
       return { path: relPath, written: content.length };
     }
 
@@ -163,7 +79,9 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
     case 'get_git_diff': {
       if (!root) throw new Error('No workspace open');
       const rawMode = (params.mode as string) || 'unstaged';
-      const mode = (['staged', 'unstaged', 'both'].includes(rawMode) ? rawMode : 'unstaged') as 'staged' | 'unstaged' | 'both';
+      const mode = (['staged', 'unstaged', 'both'].includes(rawMode)
+        ? rawMode
+        : 'unstaged') as 'staged' | 'unstaged' | 'both';
       const diff = getGitDiff(root, mode);
       const branch = getCurrentBranch(root);
       return { branch, mode, diff: diff || '(no changes)' };
@@ -245,33 +163,68 @@ function listDir(dir: string, root: string, recursive: boolean, depth = 0): stri
   return results;
 }
 
-// ── HTTP server ───────────────────────────────────────────────────────────
-
-let server: http.Server | undefined;
-let statusBarMcpItem: vscode.StatusBarItem | undefined;
-
-export function getMcpPort(): number {
-  const cfg = vscode.workspace.getConfiguration('codebreeze');
-  return cfg.get<number>('mcpPort') ?? 3700;
+/** Wrap any tool result as MCP content array */
+function toContent(result: unknown): { content: Array<{ type: 'text'; text: string }> } {
+  return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
 }
 
-export function isMcpRunning(): boolean {
-  return !!server;
-}
+// ── Server lifecycle ──────────────────────────────────────────────────────
 
 export async function startMcpServer(context: vscode.ExtensionContext): Promise<void> {
-  if (server) {
-    vscode.window.showInformationMessage(`CodeBreeze MCP server already running on port ${getMcpPort()}`);
+  if (httpServer) {
+    vscode.window.showInformationMessage(
+      `CodeBreeze MCP server already running on port ${getMcpPort()}`
+    );
     return;
   }
 
   const port = getMcpPort();
 
-  server = http.createServer(async (req, res) => {
-    // CORS
+  // ── Register tools ──
+  const mcpServer = new McpServer({ name: 'codebreeze', version: '1.0.0' });
+
+  mcpServer.tool('read_file', 'Read a file from the VS Code workspace', { path: z.string() },
+    async ({ path: p }) => toContent(await callTool('read_file', { path: p })));
+
+  mcpServer.tool('write_file', 'Write content to a workspace file (creates if not exists)',
+    { path: z.string(), content: z.string() },
+    async ({ path: p, content: c }) => toContent(await callTool('write_file', { path: p, content: c })));
+
+  mcpServer.tool('get_errors', 'Get current compilation/lint errors from VS Code diagnostics', {},
+    async () => toContent(await callTool('get_errors', {})));
+
+  mcpServer.tool('get_git_diff', 'Get git diff for the current workspace',
+    { mode: z.enum(['staged', 'unstaged', 'both']).optional() },
+    async ({ mode }) => toContent(await callTool('get_git_diff', { mode })));
+
+  mcpServer.tool('get_git_log', 'Get recent git commit log',
+    { count: z.number().optional() },
+    async ({ count }) => toContent(await callTool('get_git_log', { count })));
+
+  mcpServer.tool('run_build', 'Retrieve the last build result', {},
+    async () => toContent(await callTool('run_build', {})));
+
+  mcpServer.tool('get_project_map', 'Get a map of project files with their exported symbols', {},
+    async () => toContent(await callTool('get_project_map', {})));
+
+  mcpServer.tool('apply_code',
+    'Apply markdown code blocks to workspace files (same as Ctrl+Shift+A)',
+    { markdown: z.string() },
+    async ({ markdown }) => toContent(await callTool('apply_code', { markdown })));
+
+  mcpServer.tool('list_files', 'List files in a workspace directory',
+    { dir: z.string().optional(), recursive: z.boolean().optional() },
+    async ({ dir, recursive }) => toContent(await callTool('list_files', { dir, recursive })));
+
+  // ── HTTP server with StreamableHTTP transport ──
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  await mcpServer.connect(transport);
+
+  httpServer = http.createServer(async (req, res) => {
+    // CORS for local AI clients
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, MCP-Session-Id');
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -281,39 +234,17 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
 
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', version: '1.0', tools: TOOLS.length }));
+      res.end(JSON.stringify({ status: 'ok', version: '1.0', tools: 9 }));
       return;
     }
 
-    if (req.method !== 'POST') {
-      res.writeHead(405);
-      res.end('Method Not Allowed');
-      return;
-    }
-
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', async () => {
-      res.setHeader('Content-Type', 'application/json');
-      let rpcReq: JsonRpcRequest;
-      try {
-        rpcReq = JSON.parse(body);
-      } catch {
-        const resp: JsonRpcResponse = { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } };
-        res.writeHead(400);
-        res.end(JSON.stringify(resp));
-        return;
-      }
-
-      const resp = await handleRpc(rpcReq);
-      res.writeHead(200);
-      res.end(JSON.stringify(resp));
-    });
+    // All MCP traffic goes through the transport
+    await transport.handleRequest(req, res);
   });
 
   await new Promise<void>((resolve, reject) => {
-    server!.listen(port, '127.0.0.1', () => resolve());
-    server!.on('error', reject);
+    httpServer!.listen(port, '127.0.0.1', () => resolve());
+    httpServer!.on('error', reject);
   });
 
   // Status bar
@@ -324,56 +255,26 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
   statusBarMcpItem.show();
   context.subscriptions.push(statusBarMcpItem);
 
-  vscode.window.showInformationMessage(
-    `CodeBreeze: MCP server started on http://127.0.0.1:${port}`,
-    'Copy URL'
-  ).then((choice) => {
-    if (choice === 'Copy URL') {
-      vscode.env.clipboard.writeText(`http://127.0.0.1:${port}`);
-    }
-  });
+  vscode.window
+    .showInformationMessage(
+      `CodeBreeze: MCP server started on http://127.0.0.1:${port}`,
+      'Copy URL'
+    )
+    .then((choice) => {
+      if (choice === 'Copy URL') {
+        vscode.env.clipboard.writeText(`http://127.0.0.1:${port}`);
+      }
+    });
 }
 
 export function stopMcpServer(): void {
-  if (!server) {
+  if (!httpServer) {
     vscode.window.showInformationMessage('CodeBreeze: MCP server is not running');
     return;
   }
-  server.close();
-  server = undefined;
+  httpServer.close();
+  httpServer = undefined;
   statusBarMcpItem?.dispose();
   statusBarMcpItem = undefined;
   vscode.window.showInformationMessage('CodeBreeze: MCP server stopped');
 }
-
-async function handleRpc(req: JsonRpcRequest): Promise<JsonRpcResponse> {
-  const { id, method, params } = req;
-
-  try {
-    if (method === 'tools/list') {
-      return { jsonrpc: '2.0', id, result: { tools: TOOLS } };
-    }
-
-    if (method === 'tools/call') {
-      const p = params as { name: string; arguments?: Record<string, unknown> };
-      const result = await callTool(p.name, p.arguments ?? {});
-      return { jsonrpc: '2.0', id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } };
-    }
-
-    // Legacy direct endpoint for convenience
-    if (method.startsWith('tool/')) {
-      const toolName = method.slice(5);
-      const result = await callTool(toolName, (params as Record<string, unknown>) ?? {});
-      return { jsonrpc: '2.0', id, result };
-    }
-
-    return { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not found: ${method}` } };
-  } catch (err) {
-    return {
-      jsonrpc: '2.0',
-      id,
-      error: { code: -32000, message: err instanceof Error ? err.message : String(err) },
-    };
-  }
-}
-
