@@ -11,6 +11,10 @@ import { copyErrorsForAI } from './collect/errorCollector';
 import { runBuildAndCopy, runTestAndCopy, copyLastBuildLog } from './collect/localBuildCollector';
 import { copyBuildLogFromGitHub } from './collect/githubLogCollector';
 import { copySmartContext } from './collect/smartContext';
+import { copyProjectMap } from './collect/projectMapCollector';
+import { startMcpServer, stopMcpServer } from './mcp/mcpServer';
+import { startWsBridge, stopWsBridge } from './bridge/wsBridgeServer';
+import { showManualPastePanel } from './utils/clipboardCompat';
 
 // UI
 import { CodeBreezeSidebarProvider } from './ui/sidebarProvider';
@@ -74,6 +78,12 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.copyBuildLogFromGitHub', () => copyBuildLogFromGitHub()],
     ['codebreeze.copyMultipleFilesForAI', (uris?: unknown) => copyMultipleFilesForAI((uris as vscode.Uri[]) || [])],
     ['codebreeze.copySmartContext', () => copySmartContext()],
+    ['codebreeze.copyProjectMap', () => copyProjectMap()],
+    ['codebreeze.startMcpServer', () => startMcpServer(context)],
+    ['codebreeze.stopMcpServer', () => stopMcpServer()],
+    ['codebreeze.startWsBridge', () => startWsBridge(context)],
+    ['codebreeze.stopWsBridge', () => stopWsBridge()],
+    ['codebreeze.manualPaste', () => showManualPastePanel(context)],
     ['codebreeze.openChatPanel', () => openChatPanel()],
     ['codebreeze.openControlPanel', () => openControlPanel(context)],
     ['codebreeze.refreshSidebar', () => sidebarProvider.refresh()],

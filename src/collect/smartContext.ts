@@ -6,6 +6,7 @@ import { formatCodeBlock } from '../utils/markdown';
 import { getDiagnosticsMarkdown } from './errorCollector';
 import { getGitDiff, getCurrentBranch } from './gitCollector';
 import { getLastBuildResult } from './localBuildCollector';
+import { getProjectMap } from './projectMapCollector';
 
 export async function copySmartContext(): Promise<void> {
   const markdown = await buildSmartContext();
@@ -135,6 +136,12 @@ export async function buildContextPayload(types: string[]): Promise<string> {
         if (result) {
           parts.push(`## Build Log\n\`\`\`\n${result.stdout}${result.stderr}\n\`\`\``);
         }
+        break;
+      }
+
+      case 'projectMap': {
+        const map = await getProjectMap();
+        if (map) parts.push(map);
         break;
       }
     }

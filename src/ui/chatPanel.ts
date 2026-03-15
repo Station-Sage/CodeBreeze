@@ -7,6 +7,7 @@ import { getConfig } from '../config';
 import { generateControlPanelHtml, getNonce } from './chatPanelHtml';
 import { CodeBlock } from '../types';
 import { getHistory } from './historyStore';
+import { previewCodeBlock } from '../apply/diffPreview';
 
 let panelWebview: vscode.Webview | undefined;
 let clipboardWatcher: ReturnType<typeof setInterval> | undefined;
@@ -126,6 +127,17 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           const { undoLastApply } = await import('../apply/safetyGuard');
           await undoLastApply();
           sendHistoryUpdate();
+          break;
+        }
+
+        case 'previewBlock': {
+          const text = await vscode.env.clipboard.readText();
+          const blocks = parseClipboard(text);
+          const block = blocks[msg.index];
+          if (block) {
+            const diff = await previewCodeBlock(block);
+            webview.postMessage({ command: 'showDiff', index: msg.index, diff });
+          }
           break;
         }
       }

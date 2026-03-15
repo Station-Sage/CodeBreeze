@@ -174,6 +174,21 @@ export function generateControlPanelHtml(
       padding: 24px 8px;
       line-height: 1.6;
     }
+    .diff-panel {
+      font-family: var(--vscode-editor-font-family, monospace);
+      font-size: 11px;
+      overflow-x: auto;
+      max-height: 200px;
+      background: var(--vscode-editor-background);
+      border-top: 1px solid var(--vscode-widget-border);
+      padding: 4px 0;
+    }
+    .diff-line { display: flex; white-space: pre; }
+    .diff-line.added { background: rgba(0,200,100,0.12); color: var(--vscode-charts-green); }
+    .diff-line.removed { background: rgba(200,50,50,0.12); color: var(--vscode-charts-red); }
+    .diff-line.context { color: var(--vscode-editor-foreground); opacity: 0.75; }
+    .diff-line-marker { width: 1.4em; text-align: center; flex-shrink: 0; user-select: none; }
+    .diff-line-content { padding: 0 6px; }
     /* ── History tab ── */
     .history-item {
       border: 1px solid var(--vscode-widget-border);
@@ -393,6 +408,16 @@ export function generateControlPanelHtml(
         filename.textContent = block.filePath || ('Block ' + (idx+1) + ' (' + (block.language || 'unknown') + ')');
         filename.title = block.filePath ? ('파일: ' + block.filePath) : ('언어: ' + (block.language || 'unknown'));
 
+        const previewBtn = document.createElement('button');
+        previewBtn.className = 'secondary icon';
+        previewBtn.textContent = '🔍';
+        previewBtn.title = '적용 전 diff를 미리 봅니다.';
+        previewBtn.addEventListener('click', () => {
+          vscode.postMessage({ command: 'previewBlock', index: idx });
+          previewBtn.textContent = '⏳';
+          previewBtn.disabled = true;
+        });
+
         const applyBtn = document.createElement('button');
         applyBtn.className = 'icon';
         applyBtn.textContent = '✅ Apply';
@@ -402,6 +427,7 @@ export function generateControlPanelHtml(
         });
 
         header.appendChild(filename);
+        header.appendChild(previewBtn);
         header.appendChild(applyBtn);
 
         const preview = document.createElement('div');
@@ -473,6 +499,46 @@ export function generateControlPanelHtml(
           document.getElementById('noBlocks').textContent = msg.text || 'Loading...';
           document.getElementById('noBlocks').style.display = 'block';
           break;
+        case 'showDiff': {
+          const items = document.querySelectorAll('.code-block-item');
+          const item = items[msg.index];
+          if (!item) break;
+          // Reset preview button
+          const btn = item.querySelector('.secondary.icon');
+          if (btn) { btn.textContent = '🔍'; btn.disabled = false; }
+          // Remove existing diff panel if any
+          const existing = item.querySelector('.diff-panel');
+          if (existing) { existing.remove(); break; } // toggle off
+          if (!msg.diff) break;
+          const panel = document.createElement('div');
+          panel.className = 'diff-panel';
+          const { lines, exists, filePath } = msg.diff;
+          if (!exists) {
+            const hdr = document.createElement('div');
+            hdr.style.cssText = 'padding:2px 8px;font-size:10px;color:var(--vscode-charts-green)';
+            hdr.textContent = '+ New file: ' + filePath;
+            panel.appendChild(hdr);
+          }
+          (lines || []).forEach(l => {
+            const row = document.createElement('div');
+            row.className = 'diff-line ' + l.type;
+            const marker = document.createElement('span');
+            marker.className = 'diff-line-marker';
+            marker.textContent = l.type === 'added' ? '+' : l.type === 'removed' ? '-' : ' ';
+            const content = document.createElement('span');
+            content.className = 'diff-line-content';
+            content.textContent = l.content;
+            row.appendChild(marker);
+            row.appendChild(content);
+            panel.appendChild(row);
+          });
+          if (lines && lines.length === 0) {
+            panel.textContent = '변경 없음';
+            panel.style.padding = '4px 8px';
+          }
+          item.appendChild(panel);
+          break;
+        }
       }
     });
 

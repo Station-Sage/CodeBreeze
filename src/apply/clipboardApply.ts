@@ -6,6 +6,36 @@ import { resolveOrCreateFile } from './fileMatcher';
 import { createUndoPoint } from './safetyGuard';
 import { ApplyResult, CodeBlock } from '../types';
 
+/** Headless apply for MCP server: no QuickPick, no prompts, returns results. */
+export async function applyCodeBlocksHeadless(blocks: CodeBlock[]): Promise<ApplyResult[]> {
+  await createUndoPoint();
+  const results: ApplyResult[] = [];
+  for (const block of blocks) {
+    const uri = block.filePath ? await resolveOrCreateFile(block.filePath) : null;
+    if (!uri) {
+      results.push({ filePath: block.filePath || 'unknown', status: 'skipped' });
+      continue;
+    }
+    try {
+      if (block.isDiff) {
+        const ok = await applyPatch(block.content);
+        results.push({ filePath: block.filePath || 'unknown', status: ok ? 'applied' : 'failed' });
+      } else {
+        const doc = await vscode.workspace.openTextDocument(uri);
+        const fullRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(doc.lineCount, 0));
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(uri, fullRange, block.content);
+        await vscode.workspace.applyEdit(edit);
+        await doc.save();
+        results.push({ filePath: block.filePath || 'unknown', status: 'applied' });
+      }
+    } catch (err) {
+      results.push({ filePath: block.filePath || 'unknown', status: 'failed', error: String(err) });
+    }
+  }
+  return results;
+}
+
 export async function applyFromClipboard(): Promise<void> {
   const text = await vscode.env.clipboard.readText();
   if (!text.trim()) {

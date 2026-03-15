@@ -90,6 +90,36 @@
         "category": "CodeBreeze"
       },
       {
+        "command": "codebreeze.copyProjectMap",
+        "title": "Copy Project Map for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.startMcpServer",
+        "title": "Start MCP Server",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.stopMcpServer",
+        "title": "Stop MCP Server",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.startWsBridge",
+        "title": "Start Browser Bridge (WebSocket)",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.stopWsBridge",
+        "title": "Stop Browser Bridge",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.manualPaste",
+        "title": "Manual Paste Panel (code-server / tablet fallback)",
+        "category": "CodeBreeze"
+      },
+      {
         "command": "codebreeze.undoLastApply",
         "title": "Undo Last Apply",
         "category": "CodeBreeze"
@@ -299,6 +329,16 @@
           "type": "boolean",
           "default": false,
           "description": "Automatically watch clipboard for code blocks when control panel is open"
+        },
+        "codebreeze.mcpPort": {
+          "type": "number",
+          "default": 3700,
+          "description": "Port for CodeBreeze MCP server (Phase 3). Use 'CodeBreeze: Start MCP Server' command to start."
+        },
+        "codebreeze.wsBridgePort": {
+          "type": "number",
+          "default": 3701,
+          "description": "Port for CodeBreeze browser bridge WebSocket server (Phase 4). Use 'CodeBreeze: Start Browser Bridge' command to start."
         }
       }
     }
