@@ -14,3 +14,9 @@ package-lock.json
 node_modules/**
 !node_modules/adm-zip/**
 !node_modules/diff/**
+!node_modules/ws/**
+!node_modules/@modelcontextprotocol/**
+!node_modules/zod/**
+!node_modules/zod-to-json-schema/**
+!node_modules/@hono/**
+!node_modules/raw-body/**

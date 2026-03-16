@@ -90,6 +90,36 @@
         "category": "CodeBreeze"
       },
       {
+        "command": "codebreeze.copyProjectMap",
+        "title": "Copy Project Map for AI",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.startMcpServer",
+        "title": "Start MCP Server",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.stopMcpServer",
+        "title": "Stop MCP Server",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.startWsBridge",
+        "title": "Start Browser Bridge (WebSocket)",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.stopWsBridge",
+        "title": "Stop Browser Bridge",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.manualPaste",
+        "title": "Manual Paste Panel (code-server / tablet fallback)",
+        "category": "CodeBreeze"
+      },
+      {
         "command": "codebreeze.undoLastApply",
         "title": "Undo Last Apply",
         "category": "CodeBreeze"
@@ -127,12 +157,34 @@
         "command": "codebreeze.openControlPanel",
         "key": "ctrl+shift+i",
         "mac": "cmd+shift+i"
+      },
+      {
+        "command": "codebreeze.copySmartContext",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s"
+      },
+      {
+        "command": "codebreeze.openChatPanel",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h"
+      },
+      {
+        "command": "codebreeze.undoLastApply",
+        "key": "ctrl+shift+u",
+        "mac": "cmd+shift+u"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "codebreeze",
+          "title": "CodeBreeze",
+          "icon": "resources/icon.svg"
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "codebreeze-chat",
           "title": "CodeBreeze",
           "icon": "resources/icon.svg"
         }
@@ -144,6 +196,13 @@
           "id": "codebreezeSidebar",
           "name": "CodeBreeze",
           "type": "tree"
+        }
+      ],
+      "codebreeze-chat": [
+        {
+          "id": "codebreezePanelView",
+          "name": "CodeBreeze",
+          "type": "webview"
         }
       ]
     },
@@ -270,6 +329,16 @@
           "type": "boolean",
           "default": false,
           "description": "Automatically watch clipboard for code blocks when control panel is open"
+        },
+        "codebreeze.mcpPort": {
+          "type": "number",
+          "default": 3700,
+          "description": "Port for CodeBreeze MCP server (Phase 3). Use 'CodeBreeze: Start MCP Server' command to start."
+        },
+        "codebreeze.wsBridgePort": {
+          "type": "number",
+          "default": 3701,
+          "description": "Port for CodeBreeze browser bridge WebSocket server (Phase 4). Use 'CodeBreeze: Start Browser Bridge' command to start."
         }
       }
     }
@@ -284,13 +353,16 @@
     "package": "vsce package"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "adm-zip": "^0.5.10",
-    "diff": "^5.1.0"
+    "diff": "^5.1.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
     "@types/diff": "^5.0.9",
     "@types/glob": "^8.1.0",
+    "@types/ws": "^8.18.1",
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",

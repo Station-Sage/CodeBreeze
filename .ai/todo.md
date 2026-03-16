@@ -25,7 +25,18 @@
 - [x] lint warning 8개 정리 (미사용 변수) — 2026-03-15 완료
 
 ## 미구현 개선사항
-- I-001: code-server 클립보드 폴백
-- I-002: 프로젝트 맵 자동 생성 (AST)
-- I-003: 컨트롤 패널 diff 미리보기
+- [x] I-001: code-server 클립보드 폴백 — 2026-03-15 완료
+- [x] I-002: 프로젝트 맵 자동 생성 (AST) — 2026-03-15 완료
+- [x] I-003: 컨트롤 패널 diff 미리보기 — 2026-03-15 완료
 - I-004: Marketplace용 아이콘 PNG 등록
+
+## 신규 구현 (2026-03-15)
+- [x] Phase 3: MCP 서버 모드 (src/mcp/mcpServer.ts) — 포트 3700, 9개 도구
+- [x] Phase 4: 브라우저 WebSocket 브릿지 (src/bridge/wsBridgeServer.ts) — 포트 3701
+- [x] 유닛 테스트 3개 파일 추가 (25 tests: projectMapCollector, diffPreview, mcpServer)
+- [x] fix/bug-batch-01 머지 (squash) — 컨트롤 패널 열기 오류 수정
+
+## Android 태블릿 테스트 방안
+- VS Code Extension은 Electron 기반이라 Android 직접 실행 불가
+- **권장**: code-server (브라우저에서 VS Code 접근) → clipboardCompat 폴백 사용
+- 대안: GitHub Codespaces, Termux+code-server

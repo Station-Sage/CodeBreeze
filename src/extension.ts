@@ -11,12 +11,16 @@ import { copyErrorsForAI } from './collect/errorCollector';
 import { runBuildAndCopy, runTestAndCopy, copyLastBuildLog } from './collect/localBuildCollector';
 import { copyBuildLogFromGitHub } from './collect/githubLogCollector';
 import { copySmartContext } from './collect/smartContext';
+import { copyProjectMap } from './collect/projectMapCollector';
+import { startMcpServer, stopMcpServer } from './mcp/mcpServer';
+import { startWsBridge, stopWsBridge } from './bridge/wsBridgeServer';
+import { showManualPastePanel } from './utils/clipboardCompat';
 
 // UI
 import { CodeBreezeSidebarProvider } from './ui/sidebarProvider';
 import { initHistoryStore } from './ui/historyStore';
 import { initStatusBar, flashStatusBar } from './ui/statusBarItem';
-import { openChatPanel, openControlPanel } from './ui/chatPanel';
+import { openChatPanel, openControlPanel, CodebreezeWebviewViewProvider, isAutoWatchEnabled, setAutoWatch } from './ui/chatPanel';
 
 // Monitor
 import { registerTaskMonitor } from './monitor/taskMonitor';
@@ -36,6 +40,14 @@ export function activate(context: vscode.ExtensionContext): void {
     sidebarProvider
   );
   context.subscriptions.push(sidebarDisposable);
+
+  // Register secondary sidebar WebviewView provider
+  const panelProvider = new CodebreezeWebviewViewProvider(context);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('codebreezePanelView', panelProvider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    })
+  );
 
   // Register monitors
   registerTaskMonitor(context);
@@ -66,9 +78,19 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.copyBuildLogFromGitHub', () => copyBuildLogFromGitHub()],
     ['codebreeze.copyMultipleFilesForAI', (uris?: unknown) => copyMultipleFilesForAI((uris as vscode.Uri[]) || [])],
     ['codebreeze.copySmartContext', () => copySmartContext()],
+    ['codebreeze.copyProjectMap', () => copyProjectMap()],
+    ['codebreeze.startMcpServer', () => startMcpServer(context)],
+    ['codebreeze.stopMcpServer', () => stopMcpServer()],
+    ['codebreeze.startWsBridge', () => startWsBridge(context)],
+    ['codebreeze.stopWsBridge', () => stopWsBridge()],
+    ['codebreeze.manualPaste', () => showManualPastePanel(context)],
     ['codebreeze.openChatPanel', () => openChatPanel()],
     ['codebreeze.openControlPanel', () => openControlPanel(context)],
     ['codebreeze.refreshSidebar', () => sidebarProvider.refresh()],
+    ['codebreeze.toggleAutoWatch', () => {
+      setAutoWatch(!isAutoWatchEnabled());
+      sidebarProvider.refresh();
+    }],
   ];
 
   for (const [id, handler] of commands) {

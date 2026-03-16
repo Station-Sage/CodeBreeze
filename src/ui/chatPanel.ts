@@ -6,37 +6,68 @@ import { runBuildAndCopy, runTestAndCopy } from '../collect/localBuildCollector'
 import { getConfig } from '../config';
 import { generateControlPanelHtml, getNonce } from './chatPanelHtml';
 import { CodeBlock } from '../types';
+import { getHistory } from './historyStore';
+import { previewCodeBlock } from '../apply/diffPreview';
 
-let controlPanel: vscode.WebviewPanel | undefined;
+let panelWebview: vscode.Webview | undefined;
 let clipboardWatcher: ReturnType<typeof setInterval> | undefined;
 let lastClipboardText = '';
+let autoWatchEnabled = false;
 
-export async function openChatPanel(): Promise<void> {
-  const config = getConfig();
-  vscode.commands.executeCommand('simpleBrowser.show', config.chatUrl);
+export function isAutoWatchEnabled(): boolean {
+  return autoWatchEnabled;
 }
 
-export function openControlPanel(context: vscode.ExtensionContext): void {
-  if (controlPanel) {
-    controlPanel.reveal(vscode.ViewColumn.Two);
-    return;
+export function setAutoWatch(enabled: boolean): void {
+  autoWatchEnabled = enabled;
+  if (enabled) {
+    startClipboardWatch();
+  } else {
+    stopClipboardWatch();
   }
+  panelWebview?.postMessage({ command: 'setWatching', enabled });
+}
 
-  controlPanel = vscode.window.createWebviewPanel(
-    'codebreezeControl',
-    'CodeBreeze',
-    vscode.ViewColumn.Two,
-    {
+export class CodebreezeWebviewViewProvider implements vscode.WebviewViewProvider {
+  constructor(private readonly _context: vscode.ExtensionContext) {}
+
+  resolveWebviewView(webviewView: vscode.WebviewView): void {
+    panelWebview = webviewView.webview;
+
+    webviewView.webview.options = {
       enableScripts: true,
-      retainContextWhenHidden: true,
+    };
+
+    const nonce = getNonce();
+    webviewView.webview.html = generateControlPanelHtml(webviewView.webview, nonce);
+
+    setupMessageHandler(webviewView.webview, this._context);
+
+    const config = getConfig();
+    if (config.autoWatchClipboard) {
+      autoWatchEnabled = true;
+      startClipboardWatch();
+      webviewView.webview.postMessage({ command: 'setWatching', enabled: true });
     }
-  );
 
-  const nonce = getNonce();
-  controlPanel.webview.html = generateControlPanelHtml(controlPanel.webview, nonce);
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible) {
+        refreshClipboardBlocks();
+        sendHistoryUpdate();
+      }
+    });
 
-  // Handle messages from webview
-  controlPanel.webview.onDidReceiveMessage(
+    webviewView.onDidDispose(() => {
+      if (panelWebview === webviewView.webview) {
+        panelWebview = undefined;
+      }
+      stopClipboardWatch();
+    });
+  }
+}
+
+function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionContext): void {
+  webview.onDidReceiveMessage(
     async (msg) => {
       switch (msg.command) {
         case 'refreshClipboard':
@@ -70,6 +101,7 @@ export function openControlPanel(context: vscode.ExtensionContext): void {
           break;
 
         case 'toggleWatch':
+          autoWatchEnabled = msg.enabled;
           if (msg.enabled) {
             startClipboardWatch();
           } else {
@@ -86,36 +118,69 @@ export function openControlPanel(context: vscode.ExtensionContext): void {
           await runTestAndCopy();
           await refreshClipboardBlocks();
           break;
+
+        case 'requestHistory':
+          sendHistoryUpdate();
+          break;
+
+        case 'undoApply': {
+          const { undoLastApply } = await import('../apply/safetyGuard');
+          await undoLastApply();
+          sendHistoryUpdate();
+          break;
+        }
+
+        case 'previewBlock': {
+          const text = await vscode.env.clipboard.readText();
+          const blocks = parseClipboard(text);
+          const block = blocks[msg.index];
+          if (block) {
+            const diff = await previewCodeBlock(block);
+            webview.postMessage({ command: 'showDiff', index: msg.index, diff });
+          }
+          break;
+        }
       }
     },
     undefined,
     context.subscriptions
   );
+}
 
-  // Auto-watch if configured
+export async function openChatPanel(): Promise<void> {
   const config = getConfig();
-  if (config.autoWatchClipboard) {
-    startClipboardWatch();
-    controlPanel.webview.postMessage({ command: 'setWatching', enabled: true });
-  }
+  await vscode.env.openExternal(vscode.Uri.parse(config.chatUrl));
+}
 
-  controlPanel.onDidDispose(() => {
-    stopClipboardWatch();
-    controlPanel = undefined;
-  });
+export async function openControlPanel(_context: vscode.ExtensionContext): Promise<void> {
+  await vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
+  await vscode.commands.executeCommand('codebreezePanelView.focus');
 }
 
 async function refreshClipboardBlocks(): Promise<void> {
-  if (!controlPanel) return;
+  if (!panelWebview) return;
   const text = await vscode.env.clipboard.readText();
   const blocks = parseClipboard(text);
-  controlPanel.webview.postMessage({ command: 'updateBlocks', blocks });
+  panelWebview.postMessage({ command: 'updateBlocks', blocks });
+}
+
+function sendHistoryUpdate(): void {
+  if (!panelWebview) return;
+  const history = getHistory()
+    .slice(0, 10)
+    .map((entry) => ({
+      id: entry.id,
+      timestamp: entry.timestamp,
+      fileCount: entry.results.filter((r) => r.status === 'applied').length,
+      undoAvailable: entry.undoAvailable,
+    }));
+  panelWebview.postMessage({ command: 'updateHistory', history });
 }
 
 function startClipboardWatch(): void {
   if (clipboardWatcher) return;
   clipboardWatcher = setInterval(async () => {
-    if (!controlPanel) {
+    if (!panelWebview) {
       stopClipboardWatch();
       return;
     }
@@ -124,7 +189,7 @@ function startClipboardWatch(): void {
       lastClipboardText = text;
       const blocks = parseClipboard(text);
       if (blocks.length > 0) {
-        controlPanel.webview.postMessage({ command: 'updateBlocks', blocks });
+        panelWebview.postMessage({ command: 'updateBlocks', blocks });
         const config = getConfig();
         if (config.autoLevel !== 'off') {
           vscode.window
@@ -133,7 +198,10 @@ function startClipboardWatch(): void {
               'Open Panel'
             )
             .then((choice) => {
-              if (choice === 'Open Panel') controlPanel?.reveal();
+              if (choice === 'Open Panel') {
+                vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
+                vscode.commands.executeCommand('codebreezePanelView.focus');
+              }
             });
         }
       }
@@ -149,7 +217,6 @@ function stopClipboardWatch(): void {
 }
 
 async function applySingleBlock(block: CodeBlock): Promise<void> {
-  // Import here to avoid circular deps
   const { resolveOrCreateFile } = await import('../apply/fileMatcher');
   const { createUndoPoint } = await import('../apply/safetyGuard');
 
@@ -174,5 +241,5 @@ async function applySingleBlock(block: CodeBlock): Promise<void> {
 }
 
 export function updateControlPanel(blocks: CodeBlock[]): void {
-  controlPanel?.webview.postMessage({ command: 'updateBlocks', blocks });
+  panelWebview?.postMessage({ command: 'updateBlocks', blocks });
 }

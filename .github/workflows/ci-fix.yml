@@ -1,0 +1,36 @@
+name: CI - Fix Branches (Lightweight)
+
+on:
+  push:
+    branches:
+      - 'fix/**'
+
+jobs:
+  quick-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Basic lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Check status
+        run: |
+          echo "✅ Fix branch quick check passed!"
+          echo "📝 Full CI will run when PR is created to dev"
