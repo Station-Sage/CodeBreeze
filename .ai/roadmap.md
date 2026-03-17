@@ -63,19 +63,34 @@ Claude Desktop `~/.claude_desktop_config.json`:
 - 포트 3701 (`codebreeze.wsBridgePort` 설정), `noServer` + `handleUpgrade` 패턴
 - `broadcastToBrowser()` 함수로 연결된 모든 클라이언트에 브로드캐스트
 - 커맨드: `codebreeze.startWsBridge`, `codebreeze.stopWsBridge`
+- src/bridge/bridgeProtocol.ts — 양방향 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser)
+- src/bridge/agentLoop.ts — 자동 에이전트 루프 (빌드→에러→AI재전송, 최대 5회 반복)
 
 ### 남은 작업 (구현 후보)
-- [ ] 브라우저 확장 (Chrome/Firefox Extension) 개발 — AI챗 페이지에서 코드 블록 감지 → WebSocket 전송
-  - `browser-extension/manifest.json`: Manifest V3, `permissions: ["activeTab"]`, Kiwi Browser (Chromium) 호환
-  - `browser-extension/content.js`: MutationObserver로 Genspark 응답 영역 감시, 입력창 `querySelector('textarea, [contenteditable]')` 탐색, Send 버튼 자동 클릭
-  - `browser-extension/background.js`: `new WebSocket('ws://localhost:3701')`, 재연결 지수 백오프, 메시지 프로토콜 `{type: 'send_to_ai' | 'ai_response' | 'code_blocks', payload: string}`
-  - `src/bridge/wsBridgeServer.ts` 프로토콜 확장: 메시지 타입 추가, 브라우저↔사이드바 양방향 라우팅
-  - `src/ui/chatPanelHtml.ts` 채팅 UI 확장: 대화 히스토리 배열, 입력창 + Send 버튼, Genspark 응답 실시간 표시
-  - 자동 에이전트 루프: 코드 적용 → `npm run build` (localBuildCollector 재사용) → diagnosticsMonitor 에러 감지 → smartContext 수집 → WebSocket으로 에러 자동 재전송. 루프 깊이 제한 (최대 5회)
+브라우저 확장 (browser-extension/)
+Chrome Manifest V3, 5개 AI챗 사이트 지원 (Genspark, ChatGPT, Claude, Gemini)
+content.js: MutationObserver 기반 코드 블록 감지, Site-specific selectors, 1.5초 디바운스
+background.js: WebSocket 연결, 지수 백오프 재연결 (최대 10회), 메시지 라우팅
+popup.html/js: 연결 상태 표시 + 포트 설정
+UI 확장
+chatPanelHtml.ts: Bridge 탭 추가 (대화 히스토리, 입력창, Agent Loop 버튼)
+chatPanel.ts: Bridge 관련 메시지 핸들러 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
+
+### 완료 (2026-03-17)
+- [x] browser-extension/icons/ 아이콘 생성 (16/48/128px PNG)
+- [x] Agent Loop 반복 횟수 설정화 (`codebreeze.agentLoopMaxIterations`, 1-20, 기본 5)
+- [x] CRX/ZIP 빌드 스크립트 (`scripts/build-browser-ext.js`, `npm run build:browser-ext`)
+- [x] 컨트롤 패널 secondarySidebar → panel 이동 (WebView 로드 이슈 해결)
+- [x] localBuildCollector 다양한 빌드 도구 에러 포맷 파서 추가 (GCC/Clang, Java/Kotlin, Python, Gradle/Maven, Swift)
+- [x] I-004: Marketplace 아이콘 등록 (`resources/icon.png`)
+
+### 남은 작업 (구현 후보)
+- [ ] Firefox 확장 호환 (manifest V2 변환)
+- [ ] 브라우저 확장 Chrome Web Store 배포
 
 ## Phase 5: code-server 완전 호환 ✅ 완료 (2026-03-16)
 ### 구현 내용
-- `src/utils/clipboardCompat.ts` — VS Code Clipboard API 실패 시 `.codebreeze-clipboard.md` 파일 기반 폴백 (I-001)
+- `src/utils/clipboardCompat.ts` — VS Code Clipboard API 실패 시 `.codebreeze-clipboard.md` 파일 기반 폴백 (I-001)s
 - `showManualPastePanel()` — WebView textarea를 통한 수동 붙여넣기 (`codebreeze.manualPaste` 커맨드)
 - `docs/code-server-guide.md` — web, code-server, Termux+code-server 설치/실행 가이드
 

@@ -2,6 +2,28 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-17 — 컨트롤 패널 수정, 빌드 파서 개선, 아이콘 및 CRX 아티팩트
+- **컨트롤 패널 수정**: `secondarySidebar` (proposed API) → `panel` (하단 패널) 이동. "Drag a view here" 이슈 해결
+- **컴파일 에러 수정**: chatPanel.ts 중복 `sendBridgeStatus`, wsBridgeServer.ts 중복 `getConnectionCount` 제거
+- **localBuildCollector 개선**: GCC/Clang, Java/Kotlin, Python traceback, Gradle/Maven, Swift 에러 포맷 파서 추가 + 중복 제거
+- **Agent Loop 설정화**: `codebreeze.agentLoopMaxIterations` 설정 추가 (1-20, 기본 5). `MAX_AGENT_LOOP_ITERATIONS` → `DEFAULT_AGENT_LOOP_MAX_ITERATIONS` 이름 변경
+- **I-004 구현**: `resources/icon.png` (128x128) 생성, package.json `"icon"` 필드 추가
+- **browser-extension/icons/**: icon16/48/128.png 생성
+- **CRX 빌드**: `scripts/build-browser-ext.js` 추가, `npm run build:browser-ext`로 `dist/codebreeze-bridge.crx` + `.zip` 생성
+- **린트 정리**: agentLoop.ts 미사용 `parseClipboard` import 제거
+
+### 2026-03-17 — Phase 4 브라우저 확장 구현
+- **브라우저 확장** (browser-extension/): Chrome Manifest V3, 5개 AI챗 사이트 지원
+  - content.js (~180줄): MutationObserver 기반 코드 블록 감지, AI챗 입력창 자동화
+  - background.js (~120줄): WebSocket 연결, 지수 백오프 재연결 (최대 10회), 메시지 라우팅
+  - popup.html/js (~100줄): 연결 상태 표시 + 포트 설정
+- **bridgeProtocol.ts** (신규 ~60줄): 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser, BridgeCodeBlock)
+- **agentLoop.ts** (신규 ~150줄): 자동 에이전트 루프 — 코드 적용 → 빌드 → 에러 수집 → AI 재전송 (최대 5회)
+- **wsBridgeServer.ts** 확장: `ai_response`, `send_to_ai` 핸들러 추가, `getConnectionCount()` export
+- **chatPanelHtml.ts**: Bridge 탭 추가 (대화 히스토리, 입력창, Agent Loop 버튼)
+- **chatPanel.ts**: Bridge 관련 메시지 핸들러 추가 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
+- 설계 결정: D9 (Site-specific selectors), D10 (에이전트 루프 5회 제한), D11 (스트리밍 디바운스 1.5초)s
+
 ### 2026-03-17 — Phase 1 안정화 (에러 경로 + clipboardCompat 연동)
 - **B-002 수정**: safetyGuard stash ref → `stash@{0}` 직접 사용 (git stash list 파싱 제거)
 - **B-003 수정**: clipboardCompat.ts를 chatPanel.ts, clipboardApply.ts에 연동 (20+ 직접 호출 중 핵심 경로 교체)

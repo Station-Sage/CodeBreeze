@@ -1,0 +1,25 @@
+<!-- popup.html -->
+<!DOCTYPE html>
+<html>
+<head><style>
+  body { width: 280px; padding: 12px; font-family: system-ui; font-size: 13px; }
+  .status { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.connected { background: #4caf50; }
+  .dot.disconnected { background: #f44336; }
+  input { width: 100%; padding: 6px; box-sizing: border-box; }
+  button { width: 100%; padding: 8px; margin-top: 8px; cursor: pointer; }
+</style></head>
+<body>
+  <div class="status">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Checking...</span>
+  </div>
+  <label>WebSocket Port:
+    <input type="number" id="portInput" value="3701">
+  </label>
+  <button id="connectBtn">Connect</button>
+  <button id="disconnectBtn">Disconnect</button>
+  <script src="popup.js"></script>
+</body>
+</html>

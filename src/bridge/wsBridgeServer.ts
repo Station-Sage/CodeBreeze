@@ -8,12 +8,6 @@
  *
  * Default port: 3701 (configurable via codebreeze.wsBridgePort)
  * Uses the `ws` npm package (RFC 6455 compliant).
- *
- * Message types:
- *   browser → extension: { type: 'codeBlocks', blocks: CodeBlock[], source: string }
- *   browser → extension: { type: 'ping' }
- *   extension → browser: { type: 'pong' }
- *   extension → browser: { type: 'status', watching: boolean, port: number }
  */
 import * as http from 'http';
 import * as vscode from 'vscode';
@@ -21,6 +15,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { parseClipboard } from '../apply/markdownParser';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { getConfig } from '../config';
+import { updateControlPanel } from '../ui/chatPanel';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -40,6 +35,10 @@ export function isWsBridgeRunning(): boolean {
   return !!bridgeServer;
 }
 
+export function getConnectionCount(): number {
+  return connections.length;
+}
+
 export async function startWsBridge(context: vscode.ExtensionContext): Promise<void> {
   if (bridgeServer) {
     vscode.window.showInformationMessage(
@@ -50,13 +49,11 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
 
   const port = getWsBridgePort();
 
-  // HTTP server for health check + WebSocket upgrade
   bridgeServer = http.createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('CodeBreeze WebSocket Bridge');
   });
 
-  // WebSocket server in noServer mode (handles upgrade manually)
   wss = new WebSocketServer({ noServer: true });
 
   bridgeServer.on('upgrade', (req, socket, head) => {
@@ -196,6 +193,28 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
             }
           });
       }
+      break;
+    }
+
+    case 'ai_response': {
+      const text = String(msg.payload || '');
+      const blocks = parseClipboard(text);
+
+      const { isAgentLoopActive, handleAgentLoopResponse } = await import('./agentLoop');
+      if (isAgentLoopActive() && blocks.length > 0) {
+        handleAgentLoopResponse(blocks);
+      }
+
+      if (blocks.length > 0) {
+        updateControlPanel(blocks);
+      }
+
+      ws.send(JSON.stringify({ type: 'applyResult', applied: blocks.length, results: [] }));
+      break;
+    }
+
+    case 'send_to_ai': {
+      broadcastToBrowser({ type: 'send_to_ai', payload: String(msg.payload || '') });
       break;
     }
 

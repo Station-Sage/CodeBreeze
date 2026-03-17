@@ -225,6 +225,8 @@ export function generateControlPanelHtml(
       title="AI 응답 코드를 클립보드에서 받아서 적용합니다 (Ctrl+Shift+A: Apply All)">📥 Receive</button>
     <button class="tab" data-tab="history"
       title="코드 적용 기록을 확인하고 되돌립니다 (Ctrl+Shift+U: Undo)">📋 History</button>
+    <button class="tab" data-tab="bridge"
+      title="브라우저 확장과의 실시간 브릿지 상태 및 대화 히스토리">🌐 Bridge</button>
   </div>
 
   <!-- ── SEND Tab ── -->
@@ -313,6 +315,39 @@ export function generateControlPanelHtml(
     </div>
   </div>
 
+  <!-- ── BRIDGE Tab ── -->
+  <div class="tab-content hidden" id="tab-bridge">
+    <div class="watch-row">
+      <span class="status-dot" id="bridgeDot"></span>
+      <span id="bridgeStatus" style="font-size:12px;">Bridge: Not started</span>
+      <button class="secondary icon" id="btnStartBridge" title="WebSocket 브릿지 시작">▶</button>
+      <button class="secondary icon" id="btnStopBridge" title="WebSocket 브릿지 중지">⏹</button>
+    </div>
+
+    <div id="bridgeChatHistory" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:4px;">
+      <div class="no-blocks" id="noBridgeMessages">
+        브라우저 확장 연결 대기 중...<br>
+        ▶ 버튼을 눌러 브릿지를 시작하세요.
+      </div>
+    </div>
+
+    <div style="display:flex; gap:4px; flex-shrink:0; padding-top:4px;">
+      <textarea id="bridgeInput" rows="2"
+        placeholder="AI에게 보낼 메시지..."
+        style="flex:1; resize:none; font-family:var(--vscode-font-family); font-size:12px;
+              background:var(--vscode-input-background); color:var(--vscode-input-foreground);
+              border:1px solid var(--vscode-input-border); border-radius:3px; padding:6px;"></textarea>
+      <button id="btnBridgeSend" style="align-self:flex-end;" title="브라우저 확장을 통해 AI챗에 전송">📤</button>
+    </div>
+
+    <div style="display:flex; gap:4px; flex-shrink:0; padding-top:2px;">
+      <button class="secondary" id="btnBridgeSendContext" style="flex:1; font-size:11px;"
+        title="Smart Context를 자동으로 AI챗에 전송합니다">⚡ Send Context to AI</button>
+      <button class="secondary" id="btnAgentLoop" style="flex:1; font-size:11px;"
+        title="코드 적용 → 빌드 → 에러 → 재전송 자동 루프 (최대 5회)">🔄 Agent Loop</button>
+    </div>
+  </div>
+
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     let blocks = [];
@@ -326,12 +361,48 @@ export function generateControlPanelHtml(
         tab.classList.add('active');
         document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
 
-        // Load history when switching to history tab
         if (tab.dataset.tab === 'history') {
           vscode.postMessage({ command: 'requestHistory' });
         }
       });
     });
+
+    // ── Bridge tab handlers ──
+    document.getElementById('btnStartBridge').addEventListener('click', () => {
+      vscode.postMessage({ command: 'startBridge' });
+    });
+    document.getElementById('btnStopBridge').addEventListener('click', () => {
+      vscode.postMessage({ command: 'stopBridge' });
+    });
+    document.getElementById('btnBridgeSend').addEventListener('click', () => {
+      const input = document.getElementById('bridgeInput');
+      const text = input.value.trim();
+      if (!text) return;
+      vscode.postMessage({ command: 'bridgeSendToAI', payload: text });
+      appendBridgeMessage('user', text);
+      input.value = '';
+    });
+    document.getElementById('btnBridgeSendContext').addEventListener('click', () => {
+      vscode.postMessage({ command: 'bridgeSendContext' });
+    });
+    document.getElementById('btnAgentLoop').addEventListener('click', () => {
+      vscode.postMessage({ command: 'startAgentLoop' });
+    });
+
+    function appendBridgeMessage(role, text) {
+      document.getElementById('noBridgeMessages').style.display = 'none';
+      const container = document.getElementById('bridgeChatHistory');
+      const el = document.createElement('div');
+      el.style.cssText = 'padding:4px 8px; border-radius:4px; font-size:11px; max-height:120px; overflow-y:auto;'
+        + (role === 'user'
+          ? 'background:var(--vscode-button-background); color:var(--vscode-button-foreground); align-self:flex-end; max-width:85%;'
+          : role === 'ai'
+            ? 'background:var(--vscode-editor-lineHighlightBackground); align-self:flex-start; max-width:85%;'
+            : 'background:var(--vscode-editorWidget-background); color:var(--vscode-descriptionForeground); align-self:center; font-style:italic;');
+      el.textContent = text.length > 500 ? text.substring(0, 500) + '...' : text;
+      container.appendChild(el);
+      container.scrollTop = container.scrollHeight;
+    }
 
     // ── Send tab ──
     document.getElementById('btnSmartContext').addEventListener('click', () => {
@@ -503,12 +574,10 @@ export function generateControlPanelHtml(
           const items = document.querySelectorAll('.code-block-item');
           const item = items[msg.index];
           if (!item) break;
-          // Reset preview button
           const btn = item.querySelector('.secondary.icon');
           if (btn) { btn.textContent = '🔍'; btn.disabled = false; }
-          // Remove existing diff panel if any
           const existing = item.querySelector('.diff-panel');
-          if (existing) { existing.remove(); break; } // toggle off
+          if (existing) { existing.remove(); break; }
           if (!msg.diff) break;
           const panel = document.createElement('div');
           panel.className = 'diff-panel';
@@ -539,6 +608,22 @@ export function generateControlPanelHtml(
           item.appendChild(panel);
           break;
         }
+        case 'bridgeStatus': {
+          document.getElementById('bridgeDot').className = 'status-dot' + (msg.running ? ' active' : '');
+          document.getElementById('bridgeStatus').textContent = msg.running
+            ? 'Bridge: ws://127.0.0.1:' + msg.port + ' (' + msg.clients + ' client(s))'
+            : 'Bridge: Stopped';
+          break;
+        }
+        case 'bridgeAIResponse':
+          appendBridgeMessage('ai', msg.text);
+          break;
+        case 'bridgeUserSent':
+          appendBridgeMessage('user', msg.text);
+          break;
+        case 'agentLoopUpdate':
+          appendBridgeMessage('system', msg.text);
+          break;
       }
     });
 

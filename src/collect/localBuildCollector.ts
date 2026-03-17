@@ -3,6 +3,7 @@ import { spawnAsync } from '../utils/exec';
 import { getConfig, getWorkspaceRoot } from '../config';
 import { BuildResult, ParsedError } from '../types';
 import { formatCodeBlock } from '../utils/markdown';
+import { parseErrorOutput } from './errorParser';
 import * as fs from 'fs';
 
 let lastBuildResult: BuildResult | null = null;
@@ -141,32 +142,10 @@ function buildResultToMarkdown(result: BuildResult, _workspaceRoot: string): str
 }
 
 function parseErrors(output: string, workspaceRoot: string): ParsedError[] {
-  const errors: ParsedError[] = [];
-  const patterns = [
-    // TypeScript: src/file.ts(42,5): error TS2345
-    /^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+(.+)$/gm,
-    // Generic: src/file.ts:42:5: error: ...
-    /^(.+?):(\d+):(\d+):\s+(error|warning|note):\s+(.+)$/gm,
-    // Rust/Go: --> src/file.rs:42:5
-    /^.*?-->\s+(.+?):(\d+):(\d+)$/gm,
-  ];
-
-  for (const pattern of patterns) {
-    let match: RegExpExecArray | null;
-    pattern.lastIndex = 0;
-    while ((match = pattern.exec(output)) !== null) {
-      const filePath = match[1].trim();
-      const line = parseInt(match[2], 10);
-      const severity = (match[4] || 'error').includes('warn') ? 'warning' : 'error';
-      const message = match[5]?.trim() || '';
-
-      const context = getCodeContext(`${workspaceRoot}/${filePath}`, line, 5);
-      errors.push({ filePath, line, message, severity, codeContext: context || undefined });
-    }
-    if (errors.length > 0) break;
-  }
-
-  return errors;
+  return parseErrorOutput(output).map((info) => ({
+    ...info,
+    codeContext: getCodeContext(`${workspaceRoot}/${info.filePath}`, info.line, 5) || undefined,
+  }));
 }
 
 function getCodeContext(fullPath: string, centerLine: number, contextLines: number): string | null {

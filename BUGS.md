@@ -78,4 +78,20 @@
 ## I-004: Marketplace 아이콘 등록
 - 발견: 2026-03-15 (낮음, UX)
 - resources/icon.png (128x128) 생성 후 package.json에 `"icon": "resources/icon.png"` 재추가 필요
-- **상태**: 미구현
+- **상태**: 구현 완료 (2026-03-17)
+  - `resources/icon.png`: 128x128 PNG 로봇 아이콘 생성
+  - package.json에 `"icon": "resources/icon.png"` 추가
+
+## B-009: 컨트롤 패널 Secondary Sidebar WebView 미로드
+- **발견**: 2026-03-17
+- **증상**: 컨트롤 패널 클릭 시 "Drag a view here to display" 메시지만 표시, WebView 렌더링 안 됨
+- **원인**: `viewsContainers.secondarySidebar`는 VS Code proposed API (`contribSecondarySideBar`), 일반 확장에서 사용 불가
+- **수정**: `secondarySidebar` → `panel` (하단 패널) viewsContainer로 이동. 안정적 API 사용
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-010: chatPanel.ts / wsBridgeServer.ts 중복 함수 선언
+- **발견**: 2026-03-17
+- **증상**: `npm run compile` 시 `TS2393: Duplicate function implementation` 에러
+- **원인**: `sendBridgeStatus` (chatPanel.ts), `getConnectionCount` (wsBridgeServer.ts) 각각 2회 선언
+- **수정**: 중복 함수 선언 제거
+- **상태**: 수정 완료 (2026-03-17)
