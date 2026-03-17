@@ -25,10 +25,14 @@ export function generateControlPanelHtml(
 
   <!-- Tab bar -->
   <div class="tab-bar">
-    <button class="tab active" data-tab="send" title="Send context to AI Chat">Send</button>
-    <button class="tab" data-tab="receive" title="Receive and apply code from clipboard">Receive</button>
-    <button class="tab" data-tab="history" title="Apply history and undo">History</button>
-    <button class="tab" data-tab="bridge" title="Browser bridge and agent loop">Bridge</button>
+    <button class="tab active" data-tab="send"
+      title="컨텍스트를 AI Chat에 전송합니다 (Ctrl+Shift+S: Smart Context)">📤 Send</button>
+    <button class="tab" data-tab="receive"
+      title="AI 응답 코드를 클립보드에서 받아서 적용합니다 (Ctrl+Shift+A: Apply All)">📥 Receive</button>
+    <button class="tab" data-tab="history"
+      title="코드 적용 기록을 확인하고 되돌립니다 (Ctrl+Shift+U: Undo)">📋 History</button>
+    <button class="tab" data-tab="bridge"
+      title="브라우저 확장과의 실시간 브릿지 상태 및 대화 히스토리">🌐 Bridge</button>
   </div>
 
   <!-- SEND Tab -->
@@ -85,7 +89,7 @@ export function generateControlPanelHtml(
     </div>
   </div>
 
-  <!-- BRIDGE Tab -->
+  <!-- ── BRIDGE Tab ── -->
   <div class="tab-content hidden" id="tab-bridge">
     <div class="watch-row">
       <span class="status-dot" id="bridgeDot"></span>

@@ -45,3 +45,25 @@
 - [ ] Firefox 확장 호환 (manifest V2)
 - [ ] 스트리밍 모드: AI 응답 토큰 단위 표시
 - [ ] 멀티 파일 일괄 diff 미리보기
+
+## 완료 — Phase 4 브라우저 확장
+- [x] Task 1: bridgeProtocol.ts 신규 생성 + wsBridgeServer.ts 프로토콜 확장
+- [x] Task 2: browser-extension/ 스캐폴딩 (manifest.json, popup.html/js)
+- [x] Task 3: content.js — 5개 AI챗 사이트 코드 블록 감지
+- [x] Task 4: background.js — WebSocket 연결 + 지수 백오프 재연결
+- [x] Task 5: chatPanelHtml.ts Bridge 탭 UI + chatPanel.ts 핸들러
+- [x] Task 6: agentLoop.ts — 빌드→에러→AI재전송 자동 루프 (설정화 완료)
+- [x] Task 7: 테스트 + getConnectionCount 추가
+
+## 완료 — 안정화 + 개선
+- [x] npm run compile 에러 없음 확인 — 2026-03-17
+- [x] npm run lint 통과 (0 errors, warnings only) — 2026-03-17
+- [x] 컨트롤 패널 secondarySidebar → panel 이동 (WebView 로드 이슈 해결) — 2026-03-17
+- [x] chatPanel.ts 중복 sendBridgeStatus 함수 제거 — 2026-03-17
+- [x] wsBridgeServer.ts 중복 getConnectionCount 함수 제거 — 2026-03-17
+- [x] localBuildCollector: 다양한 빌드 도구 에러 포맷 파싱 (GCC/Clang, Java/Kotlin, Python, Gradle/Maven, Swift) — 2026-03-17
+- [x] Agent Loop 반복 횟수 설정화 (codebreeze.agentLoopMaxIterations, 기본 5, 최대 20) — 2026-03-17
+- [x] I-004: Marketplace용 아이콘 PNG 등록 (resources/icon.png + package.json icon 필드) — 2026-03-17
+- [x] browser-extension/icons/ 아이콘 생성 (16/48/128px PNG) — 2026-03-17
+- [x] 브라우저 확장 CRX/ZIP 빌드 스크립트 (scripts/build-browser-ext.js) — 2026-03-17
+- [x] agentLoop.ts 미사용 parseClipboard import 제거 — 2026-03-17
