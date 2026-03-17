@@ -24,4 +24,4 @@ export interface BridgeCodeBlock {
   content: string;
 }
 
-export const MAX_AGENT_LOOP_ITERATIONS = 5;
+export const DEFAULT_AGENT_LOOP_MAX_ITERATIONS = 5;

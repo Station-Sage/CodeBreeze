@@ -1,76 +1,47 @@
 # 할일 (2026-03-17)
 
-## 진행 중 — Phase 4 브라우저 확장
-- [x] Task 1: bridgeProtocol.ts 신규 생성 + wsBridgeServer.ts 프로토콜 확장
-- [x] Task 2: browser-extension/ 스캐폴딩 (manifest.json, popup.html/js)
-- [x] Task 3: content.js — 5개 AI챗 사이트 코드 블록 감지
-- [x] Task 4: background.js — WebSocket 연결 + 지수 백오프 재연결
-- [x] Task 5: chatPanelHtml.ts Bridge 탭 UI + chatPanel.ts 핸들러
-- [x] Task 6: agentLoop.ts — 빌드→에러→AI재전송 자동 루프 (최대 5회)
-- [x] Task 7: 테스트 + getConnectionCount 추가
+## 완료 — Phase 6: Cursor-like 자동화 개선
+- [x] errorChainCollector.ts 신규 생성 — import/require 체인 추적 (~120줄)
+- [x] chunkSplitter.ts 신규 생성 — 함수/클래스 경계 분할 (~100줄)
+- [x] diffRangeCalculator.ts 신규 생성 — 순수 diff 범위 계산 (~50줄)
+- [x] inlineDiffApply.ts 신규 생성 — 부분 편집 적용 (~80줄)
+- [x] agentLoop.ts 개선 — 테스트 명령, 조기 종료, 타임아웃, 에러 체인 컨텍스트
+- [x] chatPanelHtml.ts 분할 → chatPanelStyles.ts + chatPanelScript.ts (644→130줄)
+- [x] clipboardApply.ts 업데이트 — inline diff 모드 연동
+- [x] fileCopy.ts 업데이트 — chunkSplitter 연동 (buildChunkedFileMarkdown)
+- [x] config.ts + package.json — 4개 설정 추가 (applyMode, agentLoopTimeout, streamingDebounceMs, errorChainDepth)
+- [x] types.ts — Chunk 인터페이스 추가
+- [x] localBuildCollector.ts — path.join 사용 (Windows 경로 호환)
+- [x] chatPanel.ts — stopAgentLoop 핸들러 추가
+- [x] 테스트: errorChainCollector (14개), chunkSplitter (13개), inlineDiffApply (8개) = 35개 신규
+- [x] npm run compile — 에러 없음
+- [x] npm run lint — 신규 warning 0 (기존 5개만)
+- [x] 기존 65개 + 신규 37개 = 전체 102개 테스트 통과
+- [x] MD 파일 업데이트 (roadmap, todo, changelog, decisions, browser-extension README)
+
+## 완료 — Phase 4 브라우저 확장
+- [x] Task 1~7: bridgeProtocol, browser-extension, content.js, background.js, Bridge 탭, agentLoop, 테스트
+
+## 완료 — 안정화 + 개선
+- [x] 컨트롤 패널 secondarySidebar → panel 이동
+- [x] 중복 함수 제거 (sendBridgeStatus, getConnectionCount)
+- [x] errorParser 추출 + 8개 빌드 도구 에러 포맷 지원
+- [x] Agent Loop 반복 횟수 설정화
+- [x] Marketplace 아이콘, 브라우저 확장 아이콘, CRX 빌드 스크립트
 
 ## 남은 검증 작업
-- [ ] npm run compile 에러 없음 확인
-- [ ] npm run lint 통과
-- [ ] npm test — 기존 56개 + 신규 테스트 통과
 - [ ] Collect 흐름 테스트: Ctrl+Shift+C → 클립보드에 마크다운 포맷 확인
-- [ ] git diff/log 수집 테스트
 - [ ] 컨트롤 패널(Ctrl+Shift+I) WebView 로드 확인
-- [ ] Bridge 탭 UI 렌더링 확인
+- [ ] Bridge 탭 UI 렌더링 확인 + Agent Loop 시작/중지 테스트
 - [ ] code-server 환경 실제 테스트 (clipboardCompat 폴백 검증)
 - [ ] 브라우저 확장 Chrome 로드 테스트
+- [ ] Windows 10 VS Code 환경 테스트 (경로 호환 확인)
+- [ ] Termux 태블릿 code-server 테스트
 
-# 할일 (2026-03-16)
-
-## 완료
-- [x] npm run compile 에러 없음 확인
-- [x] 모든 import 경로 정상 확인
-- [x] 단위테스트 56개 작성 및 통과 (markdownParser, diffDetector, markdownUtils, types, projectMapCollector, diffPreview, mcpServer)
-- [x] CI에 xvfb-run npm test 단계 추가
-- [x] VSIX 패키징 오류 수정 (icon.png 참조 제거, main 경로 수정)
-- [x] Collect 흐름 완성: 모든 collect/ 모듈 구현 확인 및 lint 경고 0 달성 — 2026-03-15
-- [x] gitEventMonitor prevCommit 활용한 실제 commit 감지 구현 — 2026-03-15
-- [x] copyMultipleFilesForAI 커맨드 등록 (explorer/context 다중 선택 메뉴 포함) — 2026-03-15
-- [x] GitHub Actions 로그: public 레포 토큰 없이 조회 지원 — 2026-03-15
-- [x] 신규 테스트 10개 추가 (collectUtils.test.ts) — 2026-03-15
-- [x] I-001: code-server 클립보드 폴백 (clipboardCompat.ts) — 2026-03-16
-- [x] I-002: 프로젝트 맵 자동 생성 (projectMapCollector.ts, 8개 언어 정규식) — 2026-03-16
-- [x] I-003: 컨트롤 패널 diff 미리보기 (diffPreview.ts) — 2026-03-16
-- [x] Phase 3: MCP 서버 모드 (mcp/mcpServer.ts, 포트 3700, 9개 도구, @modelcontextprotocol/sdk) — 2026-03-16
-- [x] Phase 4: 브라우저 WebSocket 브릿지 (bridge/wsBridgeServer.ts, 포트 3701, ws 라이브러리) — 2026-03-16
-- [x] fix/bug-batch-01 머지 (squash) — 컨트롤 패널 열기 오류 수정 — 2026-03-16
-- [x] .vscodeignore 런타임 패키지 화이트리스트 추가 — 2026-03-16
-- [x] @types/ws devDependencies로 이동 — 2026-03-16
-- [x] ws.terminate() 수정 (wsBridgeServer.ts) — 2026-03-16
-- [x] docs/code-server-guide.md 작성 (web/code-server/Termux 실행 가이드) — 2026-03-16
-
-## 우선 — 핵심 기능 검증
-- [x] Apply 흐름 E2E: clipboardCompat 연동, 에러 경로 try/catch (B-007) — 2026-03-17
-- [ ] Collect 흐름 테스트: Ctrl+Shift+C → 클립보드에 마크다운 포맷 확인
-- [ ] git diff/log 수집 테스트
-- [ ] 컨트롤 패널(Ctrl+Shift+I) WebView 로드 확인
-- [ ] code-server 환경 실제 테스트 (clipboardCompat 폴백 검증)
-
-## 다음 — 안정화
-- [x] 에러 경로 처리: 빈 클립보드, 코드 블록 없는 텍스트, 파일 경로 매칭 실패 (B-007) — 2026-03-17
-- [x] safetyGuard: stash ref 버그 수정, 경고 로깅 (B-002) — 2026-03-17
-- [x] autoWatch: clipboardCompat 연동, try/catch, code-server 폴백 (B-003, B-004, B-005) — 2026-03-17
-- [x] fileMatcher: 부모 디렉토리 자동 생성, exclude 패턴 확장 (B-006) — 2026-03-17
-- [x] patchApplier: temp 파일 유니크화 (B-008) — 2026-03-17
-- [ ] localBuildCollector: 다양한 빌드 도구 에러 포맷 파싱
-- [ ] MCP 서버 실제 연결 테스트 (Claude Desktop / Cursor)
-- [x] WebSocket 브릿지 브라우저 확장 개발 (Phase 4 클라이언트 측) — 2026-03-17
-
-## 미구현 개선사항
-- [ ] I-004: Marketplace용 아이콘 PNG 등록
-- [ ] MCP transport per-request 패턴 (현재 단일 transport 재사용, stateless 완전 지원 시 변경)
-- [ ] browser-extension/icons/ placeholder 아이콘 추가
-- [x] I-001: code-server 클립보드 폴백 — 2026-03-15 완료
-- [x] I-002: 프로젝트 맵 자동 생성 (AST) — 2026-03-15 완료
-- [x] I-003: 컨트롤 패널 diff 미리보기 — 2026-03-15 완료
-
-## Android 태블릿 테스트 방안
-- VS Code Extension은 Electron 기반이라 Android 직접 실행 불가
-- **권장**: code-server (브라우저에서 VS Code 접근) → clipboardCompat 폴백 사용
-- 대안: GitHub Codespaces, Termux+code-server
-s
+## 미구현 개선사항 (향후)
+- [ ] VS Code diff editor 통합 (vscode.diff 명령)
+- [ ] MCP transport per-request 패턴
+- [ ] MCP 클라이언트 내장 (mcpClient.ts)
+- [ ] Firefox 확장 호환 (manifest V2)
+- [ ] 스트리밍 모드: AI 응답 토큰 단위 표시
+- [ ] 멀티 파일 일괄 diff 미리보기

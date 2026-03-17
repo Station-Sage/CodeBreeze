@@ -3,12 +3,12 @@ import {
   BrowserToVSCodeMessage,
   VSCodeToBrowserMessage,
   BridgeCodeBlock,
-  MAX_AGENT_LOOP_ITERATIONS,
+  DEFAULT_AGENT_LOOP_MAX_ITERATIONS,
 } from '../../src/bridge/bridgeProtocol';
 
 suite('bridgeProtocol', () => {
-  test('MAX_AGENT_LOOP_ITERATIONS is 5', () => {
-    assert.strictEqual(MAX_AGENT_LOOP_ITERATIONS, 5);
+  test('DEFAULT_AGENT_LOOP_MAX_ITERATIONS is 5', () => {
+    assert.strictEqual(DEFAULT_AGENT_LOOP_MAX_ITERATIONS, 5);
   });
 
   test('BridgeCodeBlock shape', () => {

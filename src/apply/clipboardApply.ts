@@ -5,6 +5,8 @@ import { applyPatch } from './patchApplier';
 import { resolveOrCreateFile } from './fileMatcher';
 import { createUndoPoint } from './safetyGuard';
 import { readClipboard } from '../utils/clipboardCompat';
+import { applyInlineDiff } from './inlineDiffApply';
+import { getConfig } from '../config';
 import { ApplyResult, CodeBlock } from '../types';
 
 /** Headless apply for MCP server: no QuickPick, no prompts, returns results. */
@@ -137,10 +139,25 @@ async function applyBlock(block: CodeBlock, uri?: vscode.Uri): Promise<ApplyResu
       return { filePath: label, status: success ? 'applied' : 'failed' };
     }
 
+    const config = getConfig();
+
+    // Use inline diff mode for partial edits
+    if (config.applyMode === 'inline') {
+      const choice = await vscode.window.showInformationMessage(
+        `Apply changes to ${vscode.workspace.asRelativePath(targetUri)}? (inline mode)`,
+        'Apply',
+        'Skip'
+      );
+      if (choice !== 'Apply') {
+        return { filePath: label, status: 'skipped' };
+      }
+      return applyInlineDiff(block);
+    }
+
+    // Whole-file replacement mode
     const doc = await vscode.workspace.openTextDocument(targetUri);
     const editor = await vscode.window.showTextDocument(doc, { preview: true });
 
-    // Show diff before applying
     const fullRange = new vscode.Range(
       new vscode.Position(0, 0),
       new vscode.Position(doc.lineCount, 0)

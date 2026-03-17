@@ -9,9 +9,9 @@
 - patchApplier: temp 파일 유니크화 (B-008)
 - clipboardCompat: 2초 타임아웃 추가
 
-### 미구현 (향후)
-- 에러 추적 연쇄 수집: `errorCollector.ts` 확장 → `vscode.languages.getDiagnostics()`로 에러 파일의 import/호출 그래프 재귀 추적. TypeScript Language Service API 활용. config `contextDepth` 추가
-- 청크 분할 개선: `fileCopy.ts` 확장 → 정규식 기반 함수/클래스 경계 감지 (`/^(export\s+)?(function|class|interface)/m`). 각 청크에 컨텍스트 헤더
+### 구현 완료 (2026-03-17)
+- [x] 에러 추적 연쇄 수집: `errorChainCollector.ts` — import/require 체인 추적, 순환 참조 방지, 설정 가능한 깊이 (`errorChainDepth`)
+- [x] 청크 분할 개선: `chunkSplitter.ts` — 정규식 기반 함수/클래스/인터페이스 경계 감지 (TS/JS/Python/Go/Rust/Java/Kotlin), 폴백 줄 수 분할
 
 ## Phase 2: 스마트 컨텍스트 강화 ✅ 완료 (2026-03-16)
 ### 프로젝트 맵 생성 ✅
@@ -19,16 +19,18 @@
 - `codebreeze.copyProjectMap` 커맨드, 200파일 한도, `_` 접두사 심볼 제외
 - tree-sitter 미사용 (네이티브 빌드 필요 → VSIX 배포 불가), 정규식으로 95% 정확도
 
-### 에러 추적 연쇄 수집
-- 에러 메시지에서 참조되는 파일/줄을 재귀적으로 추적
-- 호출 스택 기반 관련 함수 자동 수집
-- 최대 깊이 제한 (설정 가능)
-- **상태**: 미구현 (향후 errorCollector.ts 확장)
+### 에러 추적 연쇄 수집 ✅ 완료 (2026-03-17)
+- `src/collect/errorChainCollector.ts` — import/require 체인 추적
+- 지원: ES import, CommonJS require, Python import, C/C++ include, Go import, Rust use/mod
+- 순환 참조 방지 (visited Set), 설정 가능한 깊이 (`codebreeze.errorChainDepth`, 기본 2)
+- Agent loop에서 에러 파일의 관련 파일도 AI에 컨텍스트로 전송
 
-### 청크 분할 개선
-- 긴 파일을 함수/클래스 단위로 의미 있게 분할 (현재: 줄 수 기반)
-- 각 청크에 컨텍스트 헤더 (파일 경로, 줄 범위, 이전/다음 청크 존재 여부)
-- **상태**: 미구현 (향후 fileCopy.ts 확장)
+### 청크 분할 개선 ✅ 완료 (2026-03-17)
+- `src/collect/chunkSplitter.ts` — 함수/클래스/인터페이스 경계 감지
+- 지원 언어: TypeScript, JavaScript, Python, Go, Rust, Java, Kotlin
+- 각 청크에 `startLine`, `endLine`, `name`, `kind` 메타데이터
+- `fileCopy.ts`에 `buildChunkedFileMarkdown()` 함수 추가
+- 경계 미감지 시 기존 줄 수 기반 폴백
 
 ## Phase 3: MCP 서버 모드 ✅ 완료 (2026-03-16)
 ### 구현 내용
@@ -76,11 +78,17 @@ UI 확장
 chatPanelHtml.ts: Bridge 탭 추가 (대화 히스토리, 입력창, Agent Loop 버튼)
 chatPanel.ts: Bridge 관련 메시지 핸들러 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
 
-남은 작업 (구현 후보)
- browser-extension/icons/ placeholder 아이콘 추가
- Firefox 확장 호환 (manifest V2 변환)
- 브라우저 확장 Chrome Web Store 배포
- Agent Loop 반복 횟수 설정화 (codebreeze.agentLoopMaxIterations)
+### 완료 (2026-03-17)
+- [x] browser-extension/icons/ 아이콘 생성 (16/48/128px PNG)
+- [x] Agent Loop 반복 횟수 설정화 (`codebreeze.agentLoopMaxIterations`, 1-20, 기본 5)
+- [x] CRX/ZIP 빌드 스크립트 (`scripts/build-browser-ext.js`, `npm run build:browser-ext`)
+- [x] 컨트롤 패널 secondarySidebar → panel 이동 (WebView 로드 이슈 해결)
+- [x] localBuildCollector 다양한 빌드 도구 에러 포맷 파서 추가 (GCC/Clang, Java/Kotlin, Python, Gradle/Maven, Swift)
+- [x] I-004: Marketplace 아이콘 등록 (`resources/icon.png`)
+
+### 남은 작업 (구현 후보)
+- [ ] Firefox 확장 호환 (manifest V2 변환)
+- [ ] 브라우저 확장 Chrome Web Store 배포
 
 ## Phase 5: code-server 완전 호환 ✅ 완료 (2026-03-16)
 ### 구현 내용
@@ -91,6 +99,48 @@ chatPanel.ts: Bridge 관련 메시지 핸들러 (startBridge, stopBridge, bridge
 ### 참고
 - MCP 서버 모드 완성으로 클립보드 의존도 자체가 감소
 - Termux에서 code-server로 VS Code 확장 실행 가능 (상세: docs/code-server-guide.md)
+
+## Phase 6: Cursor-like 자동화 개선 ✅ 완료 (2026-03-17)
+### 구현 내용
+Cursor agent 수준의 자동화를 위한 개선사항 구현.
+
+**Inline Diff Apply (부분 편집)**
+- `src/apply/diffRangeCalculator.ts` — 순수 diff 범위 계산 (vscode 의존 없음, 테스트 가능)
+- `src/apply/inlineDiffApply.ts` — 변경된 줄만 교체 (전체 파일 교체 대체)
+- `codebreeze.applyMode` 설정: `'inline'` (기본) / `'wholefile'`
+- 헤드리스 모드: `applyInlineDiffHeadless()` — MCP/agent loop용
+
+**Agent Loop 개선**
+- 테스트 명령 지원: 빌드 성공 후 `testCommands[0]` 자동 실행
+- 조기 종료: 동일 에러 2회 반복 시 루프 중단 (에러 fingerprint)
+- 타임아웃 설정: `codebreeze.agentLoopTimeout` (기본 300초)
+- 에러 체인 컨텍스트: import 체인 파일도 AI에 전송
+- Stop 버튼: `stopAgentLoop()` + 패널 UI 연동 (Agent Loop ↔ Stop Agent Loop 토글)
+
+**chatPanelHtml.ts 분할** (644줄 → 300줄 이하)
+- `chatPanelStyles.ts` (~170줄): CSS 스타일
+- `chatPanelScript.ts` (~280줄): JavaScript
+- `chatPanelHtml.ts` (~130줄): HTML 조립
+
+**새 설정 4개** (package.json + config.ts)
+- `applyMode`: inline/wholefile (D13)
+- `agentLoopTimeout`: 30-1800초 (기본 300)
+- `streamingDebounceMs`: 500-10000ms (기본 1500, D11 해결)
+- `errorChainDepth`: 0-5 (기본 2, D14)
+
+**크로스 플랫폼**
+- `localBuildCollector.ts`: `path.join()` 사용 (Windows 경로 호환)
+- `errorChainCollector.ts`: `path.resolve()`/`path.normalize()` 사용
+- Termux 호환: `clipboardCompat.ts` 파일 기반 폴백 유지
+
+**타입 추가**
+- `types.ts`: `Chunk` 인터페이스
+- `config.ts`: 4개 신규 설정 필드
+
+### 남은 작업 (구현 후보)
+- [ ] VS Code diff editor 통합 (`vscode.diff` 명령으로 비교 UI 표시)
+- [ ] 스트리밍 모드: AI 응답 토큰 단위 표시 (현재 완성 후 일괄)
+- [ ] 멀티 파일 일괄 diff 미리보기
 
 ## 설계 원칙 — 확장 방향에 걸쳐 공통
 1. 기존 모듈(apply/, collect/, monitor/) 재사용

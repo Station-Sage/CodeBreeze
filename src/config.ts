@@ -17,6 +17,10 @@ export interface CodeBreezeConfig {
   chatUrl: string;
   autoLevel: 'off' | 'notify' | 'auto';
   autoWatchClipboard: boolean;
+  applyMode: 'wholefile' | 'inline';
+  agentLoopTimeout: number;
+  streamingDebounceMs: number;
+  errorChainDepth: number;
 }
 
 const LOCAL_CONFIG_FILE = '.codebreeze.json';
@@ -38,6 +42,10 @@ export function getConfig(): CodeBreezeConfig {
     chatUrl: vsConfig.get('chatUrl', 'https://www.genspark.ai/agents?type=ai_chat'),
     autoLevel: vsConfig.get('autoLevel', 'notify'),
     autoWatchClipboard: vsConfig.get('autoWatchClipboard', false),
+    applyMode: vsConfig.get('applyMode', 'inline'),
+    agentLoopTimeout: vsConfig.get('agentLoopTimeout', 300),
+    streamingDebounceMs: vsConfig.get('streamingDebounceMs', 1500),
+    errorChainDepth: vsConfig.get('errorChainDepth', 2),
   };
 
   const workspaceRoot = getWorkspaceRoot();

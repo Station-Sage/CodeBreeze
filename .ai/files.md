@@ -20,7 +20,7 @@
 - fileCopy.ts (~90줄) — 파일/선택영역/다중파일 → 마크다운 코드 블록 → 클립보드
 - gitCollector.ts (~85줄) — git diff/log → 마크다운 → 클립보드
 - errorCollector.ts (~80줄) — Problems 에러 + 주변 코드 → 클립보드
-- localBuildCollector.ts (~180줄) — 빌드/테스트 실행, 출력 캡처, 에러 파싱, 결과 저장
+- localBuildCollector.ts (~200줄) — 빌드/테스트 실행, 출력 캡처, 에러 파싱 (TS/ESLint/GCC/Java/Python/Gradle/Swift/Rust/Go), 결과 저장
 - githubLogCollector.ts (~140줄) — GitHub REST API로 워크플로우 로그 다운로드 + 에러 추출
 - smartContext.ts (~140줄) — 현재 파일 + 에러 + git diff 자동 조합; 'projectMap' 케이스 포함
 - projectMapCollector.ts (~160줄) — 8개 언어 정규식 심볼 추출, 200파일 한도, `codebreeze.copyProjectMap` (I-002)
@@ -33,7 +33,7 @@
 
 ## ui/ — 사용자 인터페이스
 - sidebarProvider.ts (~145줄) — TreeDataProvider: Send/Receive/History 트리
-- chatPanel.ts (~280줄) — WebView 패널 생성, 메시지 핸들링; clipboardCompat 연동, autoWatch try/catch; Bridge 관련 핸들러 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
+- chatPanel.ts (~270줄) — WebView 패널 생성 (panel 위치), 메시지 핸들링; clipboardCompat 연동, autoWatch try/catch; Bridge 관련 핸들러 (startBridge, stopBridge, bridgeSendToAI, bridgeSendContext, startAgentLoop)
 - chatPanelHtml.ts (~480줄) — 컨트롤 패널 HTML/CSS/JS 템플릿; 4-tab (Send, Receive, History, Bridge); diff CSS + 🔍 Preview 버튼 포함
 - historyStore.ts (~35줄) — globalState 기반 적용 히스토리 CRUD
 - statusBarItem.ts (~35줄) — 상태바 아이템 생성, flash 알림
@@ -48,8 +48,8 @@
 
 ## bridge/ — WebSocket 브릿지 (Phase 4)
 - wsBridgeServer.ts (~200줄) — WebSocket 서버, ai_response/send_to_ai 핸들러, getConnectionCount()
-- bridgeProtocol.ts (~60줄) — 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser, BridgeCodeBlock, MAX_AGENT_LOOP_ITERATIONS)
-- agentLoop.ts (~150줄) — 자동 에이전트 루프 (빌드→에러→AI재전송, 최대 5회)
+- bridgeProtocol.ts (~60줄) — 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser, BridgeCodeBlock, DEFAULT_AGENT_LOOP_MAX_ITERATIONS)
+- agentLoop.ts (~140줄) — 자동 에이전트 루프 (빌드→에러→AI재전송, codebreeze.agentLoopMaxIterations 설정)
 
 ## browser-extension/ (프로젝트 루트)
 - manifest.json — Manifest V3, 5개 AI챗 사이트 호스트 퍼미션
@@ -57,6 +57,14 @@
 - background.js (~120줄) — WebSocket 연결, 지수 백오프 재연결, 메시지 라우팅
 - popup.html/js (~100줄) — 연결 상태 표시 + 포트 설정
 - README.md — 설치/사용 가이드, WebSocket 프로토콜 설명
+- icons/ — icon16.png, icon48.png, icon128.png (확장 아이콘)
+
+## scripts/ — 빌드 스크립트
+- build-browser-ext.js — browser-extension/ → dist/codebreeze-bridge.crx + .zip 패키징
+
+## dist/ — 빌드 아티팩트
+- codebreeze-bridge.crx — Chrome 확장 CRX 파일 (사이드로딩용)
+- codebreeze-bridge.zip — Chrome 확장 ZIP 파일 (unpacked 로드용)
 
 ## test/suite/ — 테스트
 - markdownParser.test.ts — 마크다운 파서 테스트

@@ -50,3 +50,11 @@ export interface MonitorEvent {
   data: unknown;
   timestamp: number;
 }
+
+export interface Chunk {
+  startLine: number;
+  endLine: number;
+  name: string;
+  kind: 'function' | 'class' | 'block';
+  content: string;
+}

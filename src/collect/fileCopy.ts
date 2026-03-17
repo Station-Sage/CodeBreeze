@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { formatCodeBlock, truncateLines } from '../utils/markdown';
 import { getConfig } from '../config';
+import { splitByBoundary } from './chunkSplitter';
 
 export async function copyFileForAI(uri?: vscode.Uri): Promise<void> {
   let targetUri = uri;
@@ -80,4 +81,16 @@ export async function copySelectionForAI(): Promise<void> {
 
 export function buildFileMarkdown(filePath: string, lang: string, content: string, relPath: string): string {
   return formatCodeBlock(content, lang, relPath);
+}
+
+/**
+ * Split a large file by function/class boundaries and format each chunk.
+ * Returns array of markdown code blocks, one per chunk.
+ */
+export function buildChunkedFileMarkdown(lang: string, content: string, relPath: string, maxLines: number): string[] {
+  const chunks = splitByBoundary(content, lang, maxLines);
+  return chunks.map((chunk) => {
+    const label = `${relPath}:${chunk.startLine}-${chunk.endLine} (${chunk.name})`;
+    return formatCodeBlock(chunk.content, lang, label);
+  });
 }

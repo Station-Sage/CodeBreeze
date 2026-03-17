@@ -19,6 +19,7 @@
     "chatgpt",
     "automation"
   ],
+  "icon": "resources/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/Station-Sage/CodeBreeze"
@@ -182,9 +183,9 @@
           "icon": "resources/icon.svg"
         }
       ],
-      "secondarySidebar": [
+      "panel": [
         {
-          "id": "codebreeze-chat",
+          "id": "codebreeze-panel",
           "title": "CodeBreeze",
           "icon": "resources/icon.svg"
         }
@@ -198,10 +199,10 @@
           "type": "tree"
         }
       ],
-      "codebreeze-chat": [
+      "codebreeze-panel": [
         {
           "id": "codebreezePanelView",
-          "name": "CodeBreeze",
+          "name": "Control Panel",
           "type": "webview"
         }
       ]
@@ -339,6 +340,40 @@
           "type": "number",
           "default": 3701,
           "description": "Port for CodeBreeze browser bridge WebSocket server (Phase 4). Use 'CodeBreeze: Start Browser Bridge' command to start."
+        },
+        "codebreeze.agentLoopMaxIterations": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum number of iterations for the Agent Loop (build → error → AI fix cycle)"
+        },
+        "codebreeze.applyMode": {
+          "type": "string",
+          "enum": ["wholefile", "inline"],
+          "default": "inline",
+          "description": "How to apply code blocks: 'wholefile' replaces entire file, 'inline' applies only changed ranges (partial edit)"
+        },
+        "codebreeze.agentLoopTimeout": {
+          "type": "number",
+          "default": 300,
+          "minimum": 30,
+          "maximum": 1800,
+          "description": "Timeout in seconds for waiting for AI response during agent loop"
+        },
+        "codebreeze.streamingDebounceMs": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 500,
+          "maximum": 10000,
+          "description": "Debounce interval (ms) for streaming clipboard/diagnostics updates"
+        },
+        "codebreeze.errorChainDepth": {
+          "type": "number",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Depth of import chain tracing from error files (0=disabled, higher=more context)"
         }
       }
     }
@@ -350,7 +385,8 @@
     "pretest": "npm run compile",
     "test": "node ./out/test/runTests.js",
     "lint": "./node_modules/.bin/eslint src --ext ts",
-    "package": "vsce package"
+    "package": "vsce package",
+    "build:browser-ext": "node scripts/build-browser-ext.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
