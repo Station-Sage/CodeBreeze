@@ -1,8 +1,17 @@
 # 향후 확장 로드맵
 
-## Phase 1: 안정화 (현재)
+## Phase 1: 안정화 ✅ 완료 (2026-03-17)
 현재 구현된 기능의 안정성 확보.
-컴파일 에러 수정, 핵심 흐름 E2E 검증, edge case 처리.
+- Apply 흐름 E2E 검증: clipboardCompat 연동, 에러 경로 try/catch
+- safetyGuard: stash ref 버그 수정 (B-002), 경고 로깅
+- autoWatch: clipboardCompat 연동, try/catch (B-003, B-004, B-005)
+- fileMatcher: 부모 디렉토리 자동 생성 (B-006), exclude 패턴 확장
+- patchApplier: temp 파일 유니크화 (B-008)
+- clipboardCompat: 2초 타임아웃 추가
+
+### 미구현 (향후)
+- 에러 추적 연쇄 수집: `errorCollector.ts` 확장 → `vscode.languages.getDiagnostics()`로 에러 파일의 import/호출 그래프 재귀 추적. TypeScript Language Service API 활용. config `contextDepth` 추가
+- 청크 분할 개선: `fileCopy.ts` 확장 → 정규식 기반 함수/클래스 경계 감지 (`/^(export\s+)?(function|class|interface)/m`). 각 청크에 컨텍스트 헤더
 
 ## Phase 2: 스마트 컨텍스트 강화 ✅ 완료 (2026-03-16)
 ### 프로젝트 맵 생성 ✅
@@ -42,9 +51,11 @@ Claude Desktop `~/.claude_desktop_config.json`:
 }
 ```
 
-### 남은 작업
-- [ ] MCP transport per-request 패턴 (현재 단일 transport, stateless 완전 지원)
-- [ ] 인증 토큰 선택적 추가
+### 남은 작업 (구현 후보)
+- [ ] MCP transport per-request 패턴: `StreamableHTTPServerTransport` 인스턴스를 요청별로 생성 (현재 단일 인스턴스 재사용 → stateless 완전 지원)
+- [ ] 인증 토큰: `codebreeze.mcpToken` 설정 추가, HTTP 미들웨어에서 `Authorization: Bearer <token>` 검증, 토큰 없으면 localhost만 허용 (현재 동작 유지)
+- [ ] MCP 클라이언트 내장 (신규 `src/mcp/mcpClient.ts`): `@anthropic-ai/sdk` 또는 `openai` SDK로 AI API 직접 호출. 설정으로 provider 선택 (claude/openai/ollama). 사이드바 채팅 UI와 연동
+- [ ] 도구 추가: `search_symbols` (projectMapCollector 재사용), `run_test` (localBuildCollector), `refactor` (VS Code rename API)
 
 ## Phase 4: WebSocket 브릿지 ✅ 완료 (2026-03-16)
 ### 구현 내용
@@ -53,8 +64,14 @@ Claude Desktop `~/.claude_desktop_config.json`:
 - `broadcastToBrowser()` 함수로 연결된 모든 클라이언트에 브로드캐스트
 - 커맨드: `codebreeze.startWsBridge`, `codebreeze.stopWsBridge`
 
-### 남은 작업
+### 남은 작업 (구현 후보)
 - [ ] 브라우저 확장 (Chrome/Firefox Extension) 개발 — AI챗 페이지에서 코드 블록 감지 → WebSocket 전송
+  - `browser-extension/manifest.json`: Manifest V3, `permissions: ["activeTab"]`, Kiwi Browser (Chromium) 호환
+  - `browser-extension/content.js`: MutationObserver로 Genspark 응답 영역 감시, 입력창 `querySelector('textarea, [contenteditable]')` 탐색, Send 버튼 자동 클릭
+  - `browser-extension/background.js`: `new WebSocket('ws://localhost:3701')`, 재연결 지수 백오프, 메시지 프로토콜 `{type: 'send_to_ai' | 'ai_response' | 'code_blocks', payload: string}`
+  - `src/bridge/wsBridgeServer.ts` 프로토콜 확장: 메시지 타입 추가, 브라우저↔사이드바 양방향 라우팅
+  - `src/ui/chatPanelHtml.ts` 채팅 UI 확장: 대화 히스토리 배열, 입력창 + Send 버튼, Genspark 응답 실시간 표시
+  - 자동 에이전트 루프: 코드 적용 → `npm run build` (localBuildCollector 재사용) → diagnosticsMonitor 에러 감지 → smartContext 수집 → WebSocket으로 에러 자동 재전송. 루프 깊이 제한 (최대 5회)
 
 ## Phase 5: code-server 완전 호환 ✅ 완료 (2026-03-16)
 ### 구현 내용

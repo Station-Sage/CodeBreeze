@@ -19,13 +19,12 @@ export async function createUndoPoint(): Promise<UndoPoint | null> {
     const status = execSync('git status --porcelain', workspaceRoot);
     if (status.trim()) {
       execSync('git stash push -m "codebreeze-before-apply"', workspaceRoot);
-      const stashList = execSync('git stash list --format="%gd"', workspaceRoot);
-      const stashRef = stashList.split('\n')[0]?.trim() || 'stash@{0}';
+      const stashRef = 'stash@{0}';
       lastUndoPoint = { type: 'git_stash', stashRef, timestamp: Date.now() };
       return lastUndoPoint;
     }
-  } catch {
-    // git not available or no changes
+  } catch (err) {
+    console.warn('[CodeBreeze] git stash failed:', err);
   }
 
   lastUndoPoint = { type: 'workspace_edit', timestamp: Date.now() };
@@ -55,9 +54,11 @@ export async function undoLastApply(): Promise<boolean> {
     }
   }
 
-  // For workspace_edit type, use VS Code's undo
+  // For workspace_edit type, use VS Code's undo (affects all open files)
   await vscode.commands.executeCommand('workbench.action.files.revert');
-  vscode.window.showInformationMessage('CodeBreeze: Files reverted');
+  vscode.window.showInformationMessage(
+    'CodeBreeze: Files reverted (all open files affected — no git undo available)'
+  );
   lastUndoPoint = null;
   return true;
 }

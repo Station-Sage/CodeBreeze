@@ -4,6 +4,7 @@ import { detectContentType } from './diffDetector';
 import { applyPatch } from './patchApplier';
 import { resolveOrCreateFile } from './fileMatcher';
 import { createUndoPoint } from './safetyGuard';
+import { readClipboard } from '../utils/clipboardCompat';
 import { ApplyResult, CodeBlock } from '../types';
 
 /** Headless apply for MCP server: no QuickPick, no prompts, returns results. */
@@ -13,7 +14,7 @@ export async function applyCodeBlocksHeadless(blocks: CodeBlock[]): Promise<Appl
   for (const block of blocks) {
     const uri = block.filePath ? await resolveOrCreateFile(block.filePath) : null;
     if (!uri) {
-      results.push({ filePath: block.filePath || 'unknown', status: 'skipped' });
+      results.push({ filePath: block.filePath || 'unknown', status: 'skipped', error: 'No file path or resolution failed' });
       continue;
     }
     try {
@@ -37,37 +38,43 @@ export async function applyCodeBlocksHeadless(blocks: CodeBlock[]): Promise<Appl
 }
 
 export async function applyFromClipboard(): Promise<void> {
-  const text = await vscode.env.clipboard.readText();
-  if (!text.trim()) {
-    vscode.window.showInformationMessage('CodeBreeze: Clipboard is empty');
-    return;
-  }
+  try {
+    const text = await readClipboard();
+    if (!text.trim()) {
+      vscode.window.showInformationMessage('CodeBreeze: Clipboard is empty');
+      return;
+    }
 
-  const contentType = detectContentType(text);
+    const contentType = detectContentType(text);
 
-  if (contentType === 'diff') {
-    await applyPatch(text);
-    return;
-  }
-
-  if (contentType === 'mixed') {
-    const choice = await vscode.window.showQuickPick(['Apply as diff patch', 'Apply code blocks'], {
-      placeHolder: 'Clipboard contains both diff and code blocks - how to apply?',
-    });
-    if (!choice) return;
-    if (choice === 'Apply as diff patch') {
+    if (contentType === 'diff') {
       await applyPatch(text);
       return;
     }
-  }
 
-  const blocks = parseClipboard(text);
-  if (blocks.length === 0) {
-    vscode.window.showInformationMessage('CodeBreeze: No code blocks found in clipboard');
-    return;
-  }
+    if (contentType === 'mixed') {
+      const choice = await vscode.window.showQuickPick(['Apply as diff patch', 'Apply code blocks'], {
+        placeHolder: 'Clipboard contains both diff and code blocks - how to apply?',
+      });
+      if (!choice) return;
+      if (choice === 'Apply as diff patch') {
+        await applyPatch(text);
+        return;
+      }
+    }
 
-  await applyCodeBlocks(blocks);
+    const blocks = parseClipboard(text);
+    if (blocks.length === 0) {
+      vscode.window.showInformationMessage('CodeBreeze: No code blocks found in clipboard');
+      return;
+    }
+
+    await applyCodeBlocks(blocks);
+  } catch (err) {
+    vscode.window.showErrorMessage(
+      `CodeBreeze: Apply failed — ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
 }
 
 async function applyCodeBlocks(blocks: CodeBlock[]): Promise<void> {
@@ -121,7 +128,7 @@ async function applyBlock(block: CodeBlock, uri?: vscode.Uri): Promise<ApplyResu
   const label = block.filePath || 'unknown';
 
   if (!targetUri) {
-    return { filePath: label, status: 'skipped' };
+    return { filePath: label, status: 'skipped', error: 'File path could not be resolved' };
   }
 
   try {

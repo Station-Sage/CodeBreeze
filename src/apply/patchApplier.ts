@@ -21,13 +21,14 @@ export async function applyPatch(patchContent: string): Promise<boolean> {
   const targetPath = path.join(workspaceRoot, targetFile);
 
   // Write patch to temp file and apply with git apply
-  const tmpPatch = path.join(workspaceRoot, '.codebreeze-patch.diff');
+  const tmpName = `.codebreeze-patch-${Date.now()}.diff`;
+  const tmpPatch = path.join(workspaceRoot, tmpName);
   const encoder = new TextEncoder();
   await vscode.workspace.fs.writeFile(vscode.Uri.file(tmpPatch), encoder.encode(patchContent));
 
   try {
-    execSync('git apply --check .codebreeze-patch.diff', workspaceRoot);
-    execSync('git apply .codebreeze-patch.diff', workspaceRoot);
+    execSync(`git apply --check ${tmpName}`, workspaceRoot);
+    execSync(`git apply ${tmpName}`, workspaceRoot);
 
     // Open the patched file
     const doc = await vscode.workspace.openTextDocument(targetPath);

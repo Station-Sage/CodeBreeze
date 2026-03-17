@@ -11,6 +11,48 @@
   - `src/extension.ts`: commands 배열 중복 항목 제거
 - **상태**: 수정 완료 (2026-03-17) — `fix/activation-events` 브랜치
 
+## B-002: safetyGuard stash ref 추출 버그
+- **발견**: 2026-03-17
+- **증상**: `createUndoPoint`에서 `git stash list` 전체를 파싱하여 다른 stash 존재 시 잘못된 ref 반환
+- **수정**: `stash@{0}` 직접 사용 (직전 push이므로 항상 정확)
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-003: clipboardCompat 미연동 (code-server 폴백 미작동)
+- **발견**: 2026-03-17
+- **증상**: `clipboardCompat.ts`가 구현되었으나 모든 모듈에서 `vscode.env.clipboard` 직접 호출
+- **수정**: `chatPanel.ts`, `clipboardApply.ts`에서 `readClipboard`/`writeClipboard` 사용으로 교체
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-004: autoWatch 예외 시 silent failure
+- **발견**: 2026-03-17
+- **증상**: `startClipboardWatch` setInterval 내 `clipboard.readText()` 예외 시 interval 사망, UI 상태 불일치
+- **수정**: try/catch 추가, 에러 로그, interval 유지
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-005: chatPanel message handler 에러 처리 누락
+- **발견**: 2026-03-17
+- **증상**: `applyBlock`, `sendContext`, `previewBlock` 등 clipboard 호출에 try/catch 없음
+- **수정**: 각 case에 개별 try/catch 추가
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-006: fileMatcher 부모 디렉토리 미생성
+- **발견**: 2026-03-17
+- **증상**: `resolveOrCreateFile`에서 중첩 경로(`src/new/dir/file.ts`) 파일 생성 시 ENOENT
+- **수정**: `createDirectory` 호출 추가
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-007: clipboardApply 에러 경로 미처리
+- **발견**: 2026-03-17
+- **증상**: `detectContentType`, `parseClipboard`에 try/catch 없음 → 비정상 입력 시 크래시
+- **수정**: 전체 흐름 try/catch 래핑, skip 사유 로깅
+- **상태**: 수정 완료 (2026-03-17)
+
+## B-008: patchApplier temp 파일 고정 이름
+- **발견**: 2026-03-17
+- **증상**: `.codebreeze-patch.diff` 고정 이름 → 동시 적용 시 충돌, 크래시 시 잔여 파일
+- **수정**: `Date.now()` 기반 유니크 이름
+- **상태**: 수정 완료 (2026-03-17)
+
 ---
 
 # 개선사항

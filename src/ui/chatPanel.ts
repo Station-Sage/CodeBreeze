@@ -4,6 +4,7 @@ import { applyFromClipboard } from '../apply/clipboardApply';
 import { buildContextPayload } from '../collect/smartContext';
 import { runBuildAndCopy, runTestAndCopy } from '../collect/localBuildCollector';
 import { getConfig } from '../config';
+import { readClipboard, writeClipboard } from '../utils/clipboardCompat';
 import { generateControlPanelHtml, getNonce } from './chatPanelHtml';
 import { CodeBlock } from '../types';
 import { getHistory } from './historyStore';
@@ -75,10 +76,14 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           break;
 
         case 'applyBlock': {
-          const text = await vscode.env.clipboard.readText();
-          const blocks = parseClipboard(text);
-          if (blocks[msg.index]) {
-            await applySingleBlock(blocks[msg.index]);
+          try {
+            const text = await readClipboard();
+            const blocks = parseClipboard(text);
+            if (blocks[msg.index]) {
+              await applySingleBlock(blocks[msg.index]);
+            }
+          } catch (err) {
+            vscode.window.showErrorMessage(`CodeBreeze: Apply failed — ${err instanceof Error ? err.message : String(err)}`);
           }
           break;
         }
@@ -88,10 +93,14 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           break;
 
         case 'sendContext': {
-          const payload = await buildContextPayload(msg.types || []);
-          if (payload) {
-            await vscode.env.clipboard.writeText(payload);
-            vscode.window.showInformationMessage('CodeBreeze: Context copied — paste into AI chat');
+          try {
+            const payload = await buildContextPayload(msg.types || []);
+            if (payload) {
+              await writeClipboard(payload);
+              vscode.window.showInformationMessage('CodeBreeze: Context copied — paste into AI chat');
+            }
+          } catch (err) {
+            vscode.window.showErrorMessage(`CodeBreeze: Context copy failed — ${err instanceof Error ? err.message : String(err)}`);
           }
           break;
         }
@@ -131,12 +140,16 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
         }
 
         case 'previewBlock': {
-          const text = await vscode.env.clipboard.readText();
-          const blocks = parseClipboard(text);
-          const block = blocks[msg.index];
-          if (block) {
-            const diff = await previewCodeBlock(block);
-            webview.postMessage({ command: 'showDiff', index: msg.index, diff });
+          try {
+            const text = await readClipboard();
+            const blocks = parseClipboard(text);
+            const block = blocks[msg.index];
+            if (block) {
+              const diff = await previewCodeBlock(block);
+              webview.postMessage({ command: 'showDiff', index: msg.index, diff });
+            }
+          } catch (err) {
+            console.warn('[CodeBreeze] previewBlock failed:', err);
           }
           break;
         }
@@ -159,9 +172,13 @@ export async function openControlPanel(_context: vscode.ExtensionContext): Promi
 
 async function refreshClipboardBlocks(): Promise<void> {
   if (!panelWebview) return;
-  const text = await vscode.env.clipboard.readText();
-  const blocks = parseClipboard(text);
-  panelWebview.postMessage({ command: 'updateBlocks', blocks });
+  try {
+    const text = await readClipboard();
+    const blocks = parseClipboard(text);
+    panelWebview.postMessage({ command: 'updateBlocks', blocks });
+  } catch (err) {
+    console.warn('[CodeBreeze] refreshClipboardBlocks failed:', err);
+  }
 }
 
 function sendHistoryUpdate(): void {
@@ -184,27 +201,31 @@ function startClipboardWatch(): void {
       stopClipboardWatch();
       return;
     }
-    const text = await vscode.env.clipboard.readText();
-    if (text !== lastClipboardText) {
-      lastClipboardText = text;
-      const blocks = parseClipboard(text);
-      if (blocks.length > 0) {
-        panelWebview.postMessage({ command: 'updateBlocks', blocks });
-        const config = getConfig();
-        if (config.autoLevel !== 'off') {
-          vscode.window
-            .showInformationMessage(
-              `CodeBreeze: ${blocks.length} code block(s) detected in clipboard`,
-              'Open Panel'
-            )
-            .then((choice) => {
-              if (choice === 'Open Panel') {
-                vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
-                vscode.commands.executeCommand('codebreezePanelView.focus');
-              }
-            });
+    try {
+      const text = await readClipboard();
+      if (text !== lastClipboardText) {
+        lastClipboardText = text;
+        const blocks = parseClipboard(text);
+        if (blocks.length > 0) {
+          panelWebview.postMessage({ command: 'updateBlocks', blocks });
+          const config = getConfig();
+          if (config.autoLevel !== 'off') {
+            vscode.window
+              .showInformationMessage(
+                `CodeBreeze: ${blocks.length} code block(s) detected in clipboard`,
+                'Open Panel'
+              )
+              .then((choice) => {
+                if (choice === 'Open Panel') {
+                  vscode.commands.executeCommand('workbench.view.extension.codebreeze-chat');
+                  vscode.commands.executeCommand('codebreezePanelView.focus');
+                }
+              });
+          }
         }
       }
+    } catch (err) {
+      console.warn('[CodeBreeze] autoWatch clipboard read failed:', err);
     }
   }, 1000);
 }

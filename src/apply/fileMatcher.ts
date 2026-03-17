@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { getConfig, getWorkspaceRoot } from '../config';
 
+const EXCLUDE = '{**/node_modules/**,**/dist/**,**/out/**,**/.git/**}';
+
 export async function findWorkspaceFile(partialPath: string): Promise<vscode.Uri | null> {
   if (!partialPath) return null;
 
@@ -10,13 +12,13 @@ export async function findWorkspaceFile(partialPath: string): Promise<vscode.Uri
   if (!workspaceRoot) return null;
 
   // Try exact match first
-  let files = await vscode.workspace.findFiles(partialPath, '**/node_modules/**', 5);
+  let files = await vscode.workspace.findFiles(partialPath, EXCLUDE, 5);
 
   // Try with source root prefix
   if (files.length === 0 && config.sourceRoot) {
     files = await vscode.workspace.findFiles(
       `${config.sourceRoot}/${partialPath}`,
-      '**/node_modules/**',
+      EXCLUDE,
       5
     );
   }
@@ -24,7 +26,7 @@ export async function findWorkspaceFile(partialPath: string): Promise<vscode.Uri
   // Try basename glob fallback
   if (files.length === 0) {
     const basename = path.basename(partialPath);
-    files = await vscode.workspace.findFiles(`**/${basename}`, '**/node_modules/**', 10);
+    files = await vscode.workspace.findFiles(`**/${basename}`, EXCLUDE, 10);
     // Filter to those matching the partial path suffix
     const suffix = partialPath.replace(/\\/g, '/');
     const filtered = files.filter((f) => f.fsPath.replace(/\\/g, '/').endsWith(suffix));
@@ -63,6 +65,8 @@ export async function resolveOrCreateFile(filePath: string): Promise<vscode.Uri 
   if (answer !== 'Create') return null;
 
   const newUri = vscode.Uri.joinPath(vscode.Uri.file(workspaceRoot), filePath);
+  const parentUri = vscode.Uri.joinPath(newUri, '..');
+  await vscode.workspace.fs.createDirectory(parentUri);
   await vscode.workspace.fs.writeFile(newUri, new Uint8Array());
   return newUri;
 }

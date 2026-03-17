@@ -8,10 +8,10 @@
 - types.ts (~55줄) — CodeBlock, ApplyResult, HistoryEntry, BuildResult, ParsedError, ContextPayload('projectMap' 포함), MonitorEvent
 
 ## apply/ — AI챗 → VS Code
-- clipboardApply.ts (~160줄) — 메인 적용 흐름: 클립보드 읽기 → 파싱 → 매칭 → 적용; `applyCodeBlocksHeadless()` MCP용 비대화형 적용
+- clipboardApply.ts (~190줄) — 메인 적용 흐름: 클립보드 읽기 → 파싱 → 매칭 → 적용; `applyCodeBlocksHeadless()` MCP용 비대화형 적용; clipboardCompat 연동, 전체 try/catch
 - markdownParser.ts (~70줄) — 마크다운 텍스트에서 코드 블록 추출
 - diffDetector.ts (~30줄) — 코드 블록 내용이 unified diff인지 판별
-- fileMatcher.ts (~70줄) — 파일 경로를 워크스페이스 파일에 매칭 (glob, 부분 경로)
+- fileMatcher.ts (~70줄) — 파일 경로를 워크스페이스 파일에 매칭 (glob, 부분 경로); 부모 디렉토리 자동 생성
 - patchApplier.ts (~55줄) — unified diff를 파일에 적용 (diff 라이브러리)
 - safetyGuard.ts (~65줄) — git stash 백업, 히스토리 기록, undo 복원
 - diffPreview.ts (~110줄) — `diff` 패키지 `diffLines` 사용, ±3줄 컨텍스트 축소, `BlockDiff` 반환 (I-003)
@@ -33,7 +33,7 @@
 
 ## ui/ — 사용자 인터페이스
 - sidebarProvider.ts (~145줄) — TreeDataProvider: Send/Receive/History 트리
-- chatPanel.ts (~175줄) — WebView 패널 생성, 메시지 핸들링; `previewBlock` → `showDiff` 처리
+- chatPanel.ts (~265줄) — WebView 패널 생성, 메시지 핸들링; clipboardCompat 연동, autoWatch try/catch; `previewBlock` → `showDiff` 처리
 - chatPanelHtml.ts (~350줄) — 컨트롤 패널 HTML/CSS/JS 템플릿; diff CSS + 🔍 Preview 버튼 포함
 - historyStore.ts (~35줄) — globalState 기반 적용 히스토리 CRUD
 - statusBarItem.ts (~35줄) — 상태바 아이템 생성, flash 알림
@@ -41,7 +41,7 @@
 ## utils/ — 공용 유틸리티
 - exec.ts (~40줄) — child_process.exec 래퍼 (Promise, 타임아웃, cwd)
 - markdown.ts (~35줄) — 마크다운 코드 블록 포맷 헬퍼
-- clipboardCompat.ts (~80줄) — VS Code clipboard API + 파일 기반 폴백, `showManualPastePanel` WebView (I-001)
+- clipboardCompat.ts (~170줄) — VS Code clipboard API + 파일 기반 폴백 + 2초 타임아웃, `showManualPastePanel` WebView (I-001)
 
 ## mcp/ — MCP 서버 (Phase 3)
 - mcpServer.ts (~220줄) — `@modelcontextprotocol/sdk` 기반 HTTP MCP 서버, 포트 3700, 9개 도구

@@ -2,6 +2,17 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-17 — Phase 1 안정화 (에러 경로 + clipboardCompat 연동)
+- **B-002 수정**: safetyGuard stash ref → `stash@{0}` 직접 사용 (git stash list 파싱 제거)
+- **B-003 수정**: clipboardCompat.ts를 chatPanel.ts, clipboardApply.ts에 연동 (20+ 직접 호출 중 핵심 경로 교체)
+- **B-004 수정**: autoWatch setInterval 내 try/catch 추가 (silent failure 방지)
+- **B-005 수정**: chatPanel message handler 에러 처리 추가 (applyBlock, sendContext, previewBlock)
+- **B-006 수정**: fileMatcher `resolveOrCreateFile` 부모 디렉토리 자동 생성
+- **B-007 수정**: clipboardApply `applyFromClipboard` 전체 try/catch 래핑 + skip 사유 로깅
+- **B-008 수정**: patchApplier temp 파일 `Date.now()` 기반 유니크 이름
+- clipboardCompat에 2초 타임아웃 추가 (code-server 행 방지)
+- findFiles exclude에 dist/out/.git 추가
+
 ### 2026-03-16 — MCP 서버, WebSocket 브릿지, 오픈소스 라이브러리 교체
 - **Phase 3 MCP 서버** (src/mcp/mcpServer.ts): `@modelcontextprotocol/sdk` 공식 라이브러리 사용, 9개 도구 (read_file, write_file, list_files, get_errors, get_git_diff, run_build, apply_code, get_project_map, apply_code_headless), 포트 3700
 - **Phase 4 WebSocket 브릿지** (src/bridge/wsBridgeServer.ts): `ws` 라이브러리로 교체 (커스텀 RFC 6455 프레임 파서 제거), `noServer` 모드 + `handleUpgrade` 패턴, 포트 3701

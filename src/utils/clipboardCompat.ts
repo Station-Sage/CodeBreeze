@@ -13,6 +13,15 @@ import * as path from 'path';
 import { getWorkspaceRoot } from '../config';
 
 const FALLBACK_FILENAME = '.codebreeze-clipboard.md';
+const CLIPBOARD_TIMEOUT_MS = 2000;
+
+function withTimeout<T>(thenable: Thenable<T> | Promise<T>, ms: number, fallback: T): Promise<T> {
+  const wrapped = Promise.resolve(thenable);
+  return Promise.race([
+    wrapped,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
 
 function getFallbackPath(): string | null {
   const root = getWorkspaceRoot();
@@ -35,9 +44,8 @@ function isCodeServer(): boolean {
  */
 export async function writeClipboard(text: string): Promise<boolean> {
   try {
-    await vscode.env.clipboard.writeText(text);
-    // Verify write succeeded (code-server may silently fail)
-    const readBack = await vscode.env.clipboard.readText();
+    await withTimeout(vscode.env.clipboard.writeText(text), CLIPBOARD_TIMEOUT_MS, undefined);
+    const readBack = await withTimeout(vscode.env.clipboard.readText(), CLIPBOARD_TIMEOUT_MS, '');
     if (readBack === text) return true;
   } catch {
     // fall through to file fallback
@@ -76,7 +84,7 @@ export async function writeClipboard(text: string): Promise<boolean> {
 export async function readClipboard(): Promise<string> {
   let text = '';
   try {
-    text = await vscode.env.clipboard.readText();
+    text = await withTimeout(vscode.env.clipboard.readText(), CLIPBOARD_TIMEOUT_MS, '');
   } catch {
     // fall through
   }

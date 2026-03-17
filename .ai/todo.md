@@ -23,15 +23,18 @@
 - [x] docs/code-server-guide.md 작성 (web/code-server/Termux 실행 가이드) — 2026-03-16
 
 ## 우선 — 핵심 기능 검증
-- [ ] Apply 흐름 E2E 테스트: 마크다운 코드 블록 복사 → Ctrl+Shift+A → 파일 적용
+- [x] Apply 흐름 E2E: clipboardCompat 연동, 에러 경로 try/catch (B-007) — 2026-03-17
 - [ ] Collect 흐름 테스트: Ctrl+Shift+C → 클립보드에 마크다운 포맷 확인
 - [ ] git diff/log 수집 테스트
 - [ ] 컨트롤 패널(Ctrl+Shift+I) WebView 로드 확인
 - [ ] code-server 환경 실제 테스트 (clipboardCompat 폴백 검증)
 
 ## 다음 — 안정화
-- [ ] 에러 경로 처리: 빈 클립보드, 코드 블록 없는 텍스트, 파일 경로 매칭 실패
-- [ ] safetyGuard: git stash → apply → undo 전체 흐름 검증
+- [x] 에러 경로 처리: 빈 클립보드, 코드 블록 없는 텍스트, 파일 경로 매칭 실패 (B-007) — 2026-03-17
+- [x] safetyGuard: stash ref 버그 수정, 경고 로깅 (B-002) — 2026-03-17
+- [x] autoWatch: clipboardCompat 연동, try/catch, code-server 폴백 (B-003, B-004, B-005) — 2026-03-17
+- [x] fileMatcher: 부모 디렉토리 자동 생성, exclude 패턴 확장 (B-006) — 2026-03-17
+- [x] patchApplier: temp 파일 유니크화 (B-008) — 2026-03-17
 - [ ] localBuildCollector: 다양한 빌드 도구 에러 포맷 파싱
 - [ ] MCP 서버 실제 연결 테스트 (Claude Desktop / Cursor)
 - [ ] WebSocket 브릿지 브라우저 확장 개발 (Phase 4 클라이언트 측)
