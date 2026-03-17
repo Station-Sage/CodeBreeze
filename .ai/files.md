@@ -47,7 +47,15 @@
 - mcpServer.ts (~220줄) — `@modelcontextprotocol/sdk` 기반 HTTP MCP 서버, 포트 3700, 9개 도구
 
 ## bridge/ — WebSocket 브릿지 (Phase 4)
-- wsBridgeServer.ts (~160줄) — `ws` 라이브러리 기반 WebSocket 서버, 포트 3701, 브라우저 확장 연동
+- wsBridgeServer.ts (~190줄) — WebSocket 서버 + 프로토콜 핸들링
+- bridgeProtocol.ts (~60줄) — 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser)
+- agentLoop.ts (~150줄) — 자동 에이전트 루프 (빌드→에러→AI재전송, 최대 5회)
+
+## browser-extension/ (프로젝트 루트)
+- manifest.json — Manifest V3, 5개 AI챗 사이트 호스트 퍼미션
+- content.js (~180줄) — MutationObserver 코드 블록 감지, AI챗 입력창 자동화
+- background.js (~120줄) — WebSocket 연결, 지수 백오프 재연결, 메시지 라우팅
+- popup.html/js (~100줄) — 연결 상태 표시 + 포트 설정
 
 ## 규칙
 - 1파일 300줄 이하 목표, 초과 시 분할 검토

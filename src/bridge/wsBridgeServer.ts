@@ -199,8 +199,48 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
       break;
     }
 
+    // 추가할 case들:
+
+  case 'ai_response': {
+    // AI챗 페이지에서 감지된 전체 응답 텍스트
+    // → 코드 블록 파싱 후 컨트롤 패널에 전달
+    const text = String(msg.payload || '');
+    const blocks = parseClipboard(text);
+      // 에이전트 루프 활성 시 자동 처리
+    const { isAgentLoopActive, handleAgentLoopResponse } = await import('./agentLoop');
+    if (isAgentLoopActive() && blocks.length > 0) {
+      handleAgentLoopResponse(blocks);
+    }
+
+    // 컨트롤 패널에도 전달
+    notifyControlPanel(blocks, String(msg.source || ''));
+
+    if (blocks.length > 0) {
+      // 컨트롤 패널 WebView에 전달
+      notifyControlPanel('updateBlocks', { blocks });
+      // 에이전트 루프 활성 시 자동 적용 트리거
+      if (agentLoopActive) {
+        handleAgentLoopResponse(blocks);
+      }
+    }
+    
+    ws.send(JSON.stringify({ type: 'applyResult', applied: blocks.length, results: [] }));
+    break;
+  }
+
+  case 'send_to_ai': {
+    // 브라우저 확장으로 텍스트 전송 (AI챗 입력창에 입력)
+    broadcastToBrowser({ type: 'send_to_ai', payload: String(msg.payload || '') });
+    break;
+  }
+
+    
     case 'getStatus':
       ws.send(JSON.stringify({ type: 'status', watching: true, port: getWsBridgePort() }));
       break;
   }
+}
+
+export function getConnectionCount(): number {
+  return connections.length;
 }

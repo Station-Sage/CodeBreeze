@@ -37,3 +37,16 @@ VS Code Settings는 전역 기본값, .codebreeze.json은 프로젝트별 오버
 types.ts의 MonitorEvent, ContextPayload 등은 현재 내부용이지만,
 MCP 서버 모드 추가 시 외부 도구에 노출하는 인터페이스로 확장 가능.
 지금부터 타입을 깔끔하게 유지하는 이유.
+
+## D9: 브라우저 확장 Site-specific selectors
+AI챗마다 DOM 구조가 다름. CSS selector를 사이트별 오브젝트 맵으로 관리.
+범용 셀렉터 대신 사이트별 최적화 선택 — 안정성 우선.
+새 AI챗 추가 시 SITE_CONFIG에 항목 추가만 하면 됨.
+
+## D10: 에이전트 루프 최대 5회 제한
+무한 루프 방지. 5회 이상은 AI가 해결 못하는 근본적 문제일 가능성 높음.
+MAX_AGENT_LOOP_ITERATIONS 상수로 관리, 향후 설정화 가능.
+
+## D11: 스트리밍 응답 디바운스 1.5초
+AI챗은 토큰 단위로 스트리밍. 너무 빨리 감지하면 불완전한 코드 블록 추출.
+1.5초는 대부분의 코드 블록이 완성되는 시점. 사이트별 조정 가능.

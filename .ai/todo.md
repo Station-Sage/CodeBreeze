@@ -1,3 +1,14 @@
+# 할일 (2026-03-17)
+
+## 진행 중 — Phase 4 브라우저 확장
+- [ ] Task 1: bridgeProtocol.ts 신규 생성 + wsBridgeServer.ts 프로토콜 확장
+- [ ] Task 2: browser-extension/ 스캐폴딩 (manifest.json, popup.html/js)
+- [ ] Task 3: content.js — 5개 AI챗 사이트 코드 블록 감지
+- [ ] Task 4: background.js — WebSocket 연결 + 지수 백오프 재연결
+- [ ] Task 5: chatPanelHtml.ts Bridge 탭 UI + chatPanel.ts 핸들러
+- [ ] Task 6: agentLoop.ts — 빌드→에러→AI재전송 자동 루프 (최대 5회)
+- [ ] Task 7: 테스트 + getConnectionCount 추가
+
 # 할일 (2026-03-16)
 
 ## 완료

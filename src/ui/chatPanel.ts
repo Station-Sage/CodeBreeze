@@ -153,11 +153,62 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           }
           break;
         }
+      
+        case 'startBridge':
+          await vscode.commands.executeCommand('codebreeze.startWsBridge');
+          sendBridgeStatus(webview);
+          break;
+
+        case 'stopBridge':
+          await vscode.commands.executeCommand('codebreeze.stopWsBridge');
+          sendBridgeStatus(webview);
+          break;
+
+        case 'bridgeSendToAI': {
+          const { broadcastToBrowser, isWsBridgeRunning } = await import('../bridge/wsBridgeServer');
+          if (!isWsBridgeRunning()) {
+            vscode.window.showWarningMessage('CodeBreeze: Bridge not running. Start it first.');
+            break;
+          }
+          broadcastToBrowser({ type: 'send_to_ai', payload: msg.payload, autoSend: true });
+          break;
+        }
+
+        case 'bridgeSendContext': {
+          const contextPayload = await buildContextPayload(['file', 'errors', 'gitDiff']);
+          if (contextPayload) {
+            const { broadcastToBrowser, isWsBridgeRunning } = await import('../bridge/wsBridgeServer');
+            if (isWsBridgeRunning()) {
+              broadcastToBrowser({ type: 'send_to_ai', payload: contextPayload, autoSend: true });
+              webview.postMessage({ command: 'bridgeUserSent', text: '[Smart Context sent]' });
+            }
+          }
+          break;
+        }
+
+        case 'startAgentLoop':
+          startAgentLoop(webview);
+          break;
+
       }
     },
     undefined,
     context.subscriptions
   );
+}
+
+async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
+  try {
+    const { isWsBridgeRunning, getWsBridgePort, getConnectionCount } = await import('../bridge/wsBridgeServer');
+    webview.postMessage({
+      command: 'bridgeStatus',
+      running: isWsBridgeRunning(),
+      port: getWsBridgePort(),
+      clients: getConnectionCount?.() ?? 0,
+    });
+  } catch {
+    webview.postMessage({ command: 'bridgeStatus', running: false, port: 3701, clients: 0 });
+  }
 }
 
 export async function openChatPanel(): Promise<void> {

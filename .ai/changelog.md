@@ -2,6 +2,17 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+## bridge/ — WebSocket 브릿지 (Phase 4)
+- wsBridgeServer.ts (~190줄) — WebSocket 서버 + 프로토콜 핸들링
+- bridgeProtocol.ts (~60줄) — 메시지 타입 정의 (BrowserToVSCode, VSCodeToBrowser)
+- agentLoop.ts (~150줄) — 자동 에이전트 루프 (빌드→에러→AI재전송, 최대 5회)
+
+## browser-extension/ (프로젝트 루트)
+- manifest.json — Manifest V3, 5개 AI챗 사이트 호스트 퍼미션
+- content.js (~180줄) — MutationObserver 코드 블록 감지, AI챗 입력창 자동화
+- background.js (~120줄) — WebSocket 연결, 지수 백오프 재연결, 메시지 라우팅
+- popup.html/js (~100줄) — 연결 상태 표시 + 포트 설정
+
 ### 2026-03-17 — Phase 1 안정화 (에러 경로 + clipboardCompat 연동)
 - **B-002 수정**: safetyGuard stash ref → `stash@{0}` 직접 사용 (git stash list 파싱 제거)
 - **B-003 수정**: clipboardCompat.ts를 chatPanel.ts, clipboardApply.ts에 연동 (20+ 직접 호출 중 핵심 경로 교체)
