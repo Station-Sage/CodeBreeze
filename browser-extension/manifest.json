@@ -5,7 +5,8 @@
   "description": "Bridge between AI chat pages and VS Code CodeBreeze extension",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "https://www.genspark.ai/*",

@@ -27,6 +27,7 @@ export interface CodeBreezeConfig {
   smartContextMode: 'manual' | 'auto';
   backgroundAgentMode: 'off' | 'bridge';
   backgroundAgentTrigger: 'auto' | 'notify';
+  autoStartBridge: boolean;
   inlineCompletionEnabled: boolean;
   inlineCompletionSource: 'bridge' | 'mcp';
 }
@@ -60,6 +61,7 @@ export function getConfig(): CodeBreezeConfig {
     smartContextMode: vsConfig.get('smartContextMode', 'manual'),
     backgroundAgentMode: vsConfig.get('backgroundAgentMode', 'off'),
     backgroundAgentTrigger: vsConfig.get('backgroundAgentTrigger', 'notify'),
+    autoStartBridge: vsConfig.get('autoStartBridge', false),
     inlineCompletionEnabled: vsConfig.get('inlineCompletionEnabled', false),
     inlineCompletionSource: vsConfig.get('inlineCompletionSource', 'bridge'),
   };

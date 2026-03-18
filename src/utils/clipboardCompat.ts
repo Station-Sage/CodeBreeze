@@ -15,6 +15,9 @@ import { getWorkspaceRoot } from '../config';
 const FALLBACK_FILENAME = '.codebreeze-clipboard.md';
 const CLIPBOARD_TIMEOUT_MS = 2000;
 
+/** Cached result of clipboard availability test */
+let clipboardAvailable: boolean | null = null;
+
 function withTimeout<T>(thenable: Thenable<T> | Promise<T>, ms: number, fallback: T): Promise<T> {
   const wrapped = Promise.resolve(thenable);
   return Promise.race([
@@ -28,13 +31,16 @@ function getFallbackPath(): string | null {
   return root ? path.join(root, FALLBACK_FILENAME) : null;
 }
 
+/** Detect code-server / browser-based VS Code environments */
 function isCodeServer(): boolean {
-  // code-server sets VSCODE_AGENT_FOLDER or runs in a remote environment
+  // vscode.env.uriScheme is 'vscode' for desktop, 'http'/'https' for code-server
+  const scheme = vscode.env.uriScheme;
+  if (scheme === 'http' || scheme === 'https') return true;
+
+  // Fallback: check known env vars
   return !!(
     process.env.VSCODE_AGENT_FOLDER ||
-    process.env.CS_DISABLE_FILE_DOWNLOADS ||
-    // vscode.env.remoteName is available after activation
-    (vscode.env.remoteName && vscode.env.remoteName !== '')
+    process.env.CS_DISABLE_FILE_DOWNLOADS
   );
 }
 
@@ -43,12 +49,19 @@ function isCodeServer(): boolean {
  * Returns true if clipboard write succeeded, false if fallback was used.
  */
 export async function writeClipboard(text: string): Promise<boolean> {
-  try {
-    await withTimeout(vscode.env.clipboard.writeText(text), CLIPBOARD_TIMEOUT_MS, undefined);
-    const readBack = await withTimeout(vscode.env.clipboard.readText(), CLIPBOARD_TIMEOUT_MS, '');
-    if (readBack === text) return true;
-  } catch {
-    // fall through to file fallback
+  // Skip clipboard attempt if previously detected as unavailable
+  if (clipboardAvailable !== false) {
+    try {
+      await withTimeout(vscode.env.clipboard.writeText(text), CLIPBOARD_TIMEOUT_MS, undefined);
+      const readBack = await withTimeout(vscode.env.clipboard.readText(), CLIPBOARD_TIMEOUT_MS, '');
+      if (readBack === text) {
+        clipboardAvailable = true;
+        return true;
+      }
+    } catch {
+      // fall through to file fallback
+    }
+    clipboardAvailable = false;
   }
 
   // File-based fallback
@@ -56,13 +69,15 @@ export async function writeClipboard(text: string): Promise<boolean> {
   if (fbPath) {
     try {
       fs.writeFileSync(fbPath, text, 'utf8');
+      // Auto-open Manual Paste panel in code-server environments
       if (isCodeServer()) {
         vscode.window.showInformationMessage(
-          `CodeBreeze: Clipboard unavailable — saved to ${FALLBACK_FILENAME}. ` +
-            'Open the file and copy its contents manually.',
-          'Open File'
+          `CodeBreeze: Clipboard unavailable — saved to ${FALLBACK_FILENAME}.`,
+          'Open Manual Paste', 'Open File'
         ).then((choice) => {
-          if (choice === 'Open File') {
+          if (choice === 'Open Manual Paste') {
+            vscode.commands.executeCommand('codebreeze.manualPaste');
+          } else if (choice === 'Open File') {
             vscode.workspace.openTextDocument(fbPath!).then((doc) =>
               vscode.window.showTextDocument(doc)
             );

@@ -2,6 +2,12 @@
 chrome.storage.local.get(['wsPort', 'wsConnected'], (data) => {
   document.getElementById('portInput').value = data.wsPort || 3701;
   updateStatus(data.wsConnected);
+
+  // Auto-reconnect if disconnected when popup opens
+  if (!data.wsConnected) {
+    const port = data.wsPort || 3701;
+    chrome.runtime.sendMessage({ action: 'connect', port });
+  }
 });
 
 document.getElementById('connectBtn').addEventListener('click', () => {

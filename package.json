@@ -450,6 +450,11 @@
           "default": "notify",
           "description": "Background Agent trigger: 'auto' runs Agent Loop immediately on errors, 'notify' asks user first"
         },
+        "codebreeze.autoStartBridge": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start Browser Bridge (WebSocket) when the extension activates"
+        },
         "codebreeze.inlineCompletionEnabled": {
           "type": "boolean",
           "default": false,
