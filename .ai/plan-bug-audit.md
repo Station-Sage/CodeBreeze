@@ -64,19 +64,19 @@ B-003에서 `vscode.env.clipboard` → `writeClipboard()` 교체가 chatPanel.ts
 
 ---
 
-## 수정 우선순위
+## 수정 우선순위 — 전체 수정 완료 (2026-03-18)
 
-### 1차 (Critical + High 보안)
+### 1차 (Critical + High 보안) ✅
 B-014, B-017, B-018, B-019
 
-### 2차 (High 안정성)
-B-015, B-016, B-019, B-020
+### 2차 (High 안정성) ✅
+B-015, B-016, B-020
 
-### 3차 (Medium — clipboard 직접 호출 일괄 수정)
-B-031, B-032, B-033, B-034 — `vscode.env.clipboard.writeText` → `writeClipboard()` 일괄 교체
+### 3차 (Medium — clipboard 직접 호출 일괄 수정) ✅
+B-031~B-035 — `vscode.env.clipboard.writeText` → `writeClipboard()` 일괄 교체
 
-### 4차 (Medium — 기타)
+### 4차 (Medium — 기타) ✅
 B-021, B-022, B-023, B-025, B-027, B-028, B-030, B-037
 
-### 5차 (Low — 선택적)
-B-024, B-026, B-029, B-035, B-036
+### 5차 (Low) ✅
+B-024, B-026, B-029, B-036
