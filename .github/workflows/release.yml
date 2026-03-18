@@ -43,6 +43,9 @@ jobs:
       - name: Package VSIX
         run: npx vsce package
 
+      - name: Build browser extension (CRX + ZIP)
+        run: npm run build:browser-ext
+
       - name: Get version
         id: version
         run: |
@@ -57,7 +60,10 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: CodeBreeze ${{ steps.version.outputs.version }}
-          files: '*.vsix'
+          files: |
+            *.vsix
+            dist/codebreeze-bridge.zip
+            dist/codebreeze-bridge.crx
           draft: false
           prerelease: false
           generate_release_notes: true

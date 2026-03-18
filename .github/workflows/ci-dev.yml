@@ -41,12 +41,25 @@ jobs:
       - name: Package VSIX
         run: npx vsce package
 
+      - name: Build browser extension (CRX + ZIP)
+        run: npm run build:browser-ext
+
       - name: Upload VSIX artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: codebreeze-vsix
           path: '*.vsix'
+          retention-days: 30
+
+      - name: Upload browser extension artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebreeze-browser-ext
+          path: |
+            dist/codebreeze-bridge.zip
+            dist/codebreeze-bridge.crx
           retention-days: 30
 
       - name: Comment PR with artifact
@@ -58,5 +71,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '✅ CI passed! VSIX artifact is available in the Actions tab.'
+              body: '✅ CI passed! VSIX and browser extension (CRX/ZIP) artifacts are available in the Actions tab.'
             })
