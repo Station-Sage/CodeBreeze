@@ -155,6 +155,16 @@
         "command": "codebreeze.copyLspProjectMap",
         "title": "Copy LSP Project Map for AI",
         "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.toggleBackgroundAgent",
+        "title": "Toggle Background Agent",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.triggerInlineCompletion",
+        "title": "Trigger Inline Completion",
+        "category": "CodeBreeze"
       }
     ],
     "keybindings": [
@@ -193,6 +203,12 @@
         "command": "codebreeze.fixErrorWithAI",
         "key": "ctrl+shift+f",
         "mac": "cmd+shift+f"
+      },
+      {
+        "command": "codebreeze.triggerInlineCompletion",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorFocus"
       }
     ],
     "viewsContainers": {
@@ -421,6 +437,29 @@
           "enum": ["manual", "auto"],
           "default": "manual",
           "description": "Smart Context mode: 'manual' includes only standard context, 'auto' adds LSP symbols and error references automatically"
+        },
+        "codebreeze.backgroundAgentMode": {
+          "type": "string",
+          "enum": ["off", "bridge"],
+          "default": "off",
+          "description": "Background Agent mode: 'off' disables auto-monitoring, 'bridge' monitors errors and auto-triggers Agent Loop via browser bridge"
+        },
+        "codebreeze.backgroundAgentTrigger": {
+          "type": "string",
+          "enum": ["auto", "notify"],
+          "default": "notify",
+          "description": "Background Agent trigger: 'auto' runs Agent Loop immediately on errors, 'notify' asks user first"
+        },
+        "codebreeze.inlineCompletionEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable inline code completion (triggered with Ctrl+Shift+L). Sends context to AI via bridge or MCP."
+        },
+        "codebreeze.inlineCompletionSource": {
+          "type": "string",
+          "enum": ["bridge", "mcp"],
+          "default": "bridge",
+          "description": "Source for inline completions: 'bridge' sends to browser AI chat, 'mcp' exposes to MCP clients"
         }
       }
     }

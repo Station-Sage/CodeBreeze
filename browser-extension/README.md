@@ -97,6 +97,10 @@ VS Code 설정에서 `codebreeze.wsBridgePort` 값을 변경한 후,
 | `codebreeze.diffPreviewMode` | native | Diff 미리보기 모드 (native/inline) |
 | `codebreeze.rulesFile` | .codebreeze-rules.md | 프로젝트 규칙 파일 경로 |
 | `codebreeze.agentLoopAutoApply` | preview | Agent Loop 적용 모드 (preview/auto/safe) |
+| `codebreeze.backgroundAgentMode` | off | 백그라운드 Agent (off/bridge) |
+| `codebreeze.backgroundAgentTrigger` | notify | 자동 트리거 방식 (auto/notify) |
+| `codebreeze.inlineCompletionEnabled` | false | 인라인 코드 완성 활성화 |
+| `codebreeze.inlineCompletionSource` | bridge | 완성 소스 (bridge/mcp) |
 
 ## 파일 구조
 

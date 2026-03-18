@@ -3,9 +3,9 @@
 경로: src/
 
 ## 진입점
-- extension.ts (~120줄) — activate/deactivate, 명령 등록, 모니터 초기화, 사이드바 등록
-- config.ts (~70줄) — CodeBreezeConfig 인터페이스 (21개 설정), VS Code 설정 + .codebreeze.json 병합
-- types.ts (~55줄) — CodeBlock, ApplyResult, HistoryEntry, BuildResult, ParsedError, ContextPayload('projectMap' 포함), MonitorEvent
+- extension.ts (~140줄) — activate/deactivate, 명령 등록, 모니터 초기화, 사이드바 등록, LSP 인덱서/인라인 완성/백그라운드 에이전트 초기화 (Phase 10-11)
+- config.ts (~80줄) — CodeBreezeConfig 인터페이스 (25개 설정), VS Code 설정 + .codebreeze.json 병합
+- types.ts (~55줄) — CodeBlock, ApplyResult, HistoryEntry, BuildResult, ParsedError, ContextPayload('lspProjectMap' 포함), MonitorEvent
 
 ## apply/ — AI챗 → VS Code
 - clipboardApply.ts (~190줄) — 메인 적용 흐름: 클립보드 읽기 → 파싱 → 매칭 → 적용; `applyCodeBlocksHeadless()` MCP용 비대화형 적용; clipboardCompat 연동, 전체 try/catch
@@ -47,14 +47,19 @@
 - markdown.ts (~35줄) — 마크다운 코드 블록 포맷 헬퍼
 - clipboardCompat.ts (~170줄) — VS Code clipboard API + 파일 기반 폴백 + 2초 타임아웃, `showManualPastePanel` WebView (I-001)
 
-## mcp/ — MCP 서버 (Phase 3 + 10)
-- mcpServer.ts (~280줄) — `@modelcontextprotocol/sdk` 기반 HTTP MCP 서버, 포트 3700, 12개 도구 (`search_symbols`, `find_references`, `get_lsp_project_map` 추가 — Phase 10-3)
+## mcp/ — MCP 서버 (Phase 3 + 10 + 11)
+- mcpServer.ts (~300줄) — `@modelcontextprotocol/sdk` 기반 HTTP MCP 서버, 포트 3700, 13개 도구 (`get_pending_completion` 추가 — Phase 11-4)
 
-## bridge/ — WebSocket 브릿지 (Phase 4 + 7-9)
+## bridge/ — WebSocket 브릿지 (Phase 4 + 7-9 + 11)
 - wsBridgeServer.ts (~240줄) — WebSocket 서버, ACK 프로토콜, 재전송 큐, OutputChannel 로그, 연결 상태 모니터링 (Phase 7-3)
 - bridgeProtocol.ts (~40줄) — 메시지 타입 정의 (ACK, AgentLoopPhase, AgentLoopAutoApplyMode)
 - agentLoop.ts (~300줄) — Phase-aware 에이전트 루프 (Analyze→Request→Waiting→Apply→Verify), 3모드 자동 적용, 이전 시도 히스토리 (Phase 9)
 - promptBuilder.ts (~100줄) — 구조화된 에러 수정 프롬프트 빌더, 반복 히스토리 포함 (Phase 9-1)
+- backgroundAgent.ts (~200줄) — 백그라운드 에이전트, 진단 모니터링 → 자동 Agent Loop 트리거, 디바운스/쿨다운/연속 실행 제한, 상태바 표시 (Phase 11-1)
+
+## providers/ — VS Code 프로바이더 (Phase 11)
+- inlineCompletionProvider.ts (~180줄) — InlineCompletionItemProvider, 의도적 트리거 전용(D18), 캐시, bridge/MCP 소스, `triggerInlineCompletion` 수동 커맨드 (Phase 11-2)
+- completionContextBuilder.ts (~130줄) — 인라인 완성용 컨텍스트 빌더, 커서 전후 코드 + LSP 심볼 + 진단 + 규칙, 토큰 버짓 2000 (Phase 11-3)
 
 ## commands/ — 명령 모듈
 - fixWithAI.ts (~100줄) — 원클릭 에러 수정 워크플로우 (Phase 8-3)
@@ -94,6 +99,8 @@
 - lspIndexer.test.ts — LSP 심볼 인덱서 테스트 (Phase 10-1)
 - lspReferences.test.ts — LSP 참조/콜 계층 테스트 (Phase 10-2)
 - mcpServerPhase10.test.ts — MCP 서버 Phase 10 도구 테스트 (Phase 10-3)
+- backgroundAgent.test.ts — 백그라운드 에이전트 테스트 (Phase 11-1)
+- inlineCompletion.test.ts — 인라인 완성 + 컨텍스트 빌더 테스트 (Phase 11-2/3)
 
 ## 규칙
 - 1파일 300줄 이하 목표, 초과 시 분할 검토

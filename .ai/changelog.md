@@ -2,6 +2,38 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-18 — Phase 11 구현 (백그라운드 Agent + 인라인 코드 완성)
+
+#### Task 11-1: 백그라운드 Agent
+- **backgroundAgent.ts** 신규 (~200줄): 진단 모니터링 → 자동 Agent Loop 트리거
+- 5초 디바운스, 30초 최소 간격, 연속 3회 제한 + 60초 쿨다운
+- 상태바: idle/watching/triggered/running/cooldown 표시
+- `backgroundAgentMode` 설정: 'off' (기본) / 'bridge'
+- `backgroundAgentTrigger` 설정: 'auto' / 'notify' (기본)
+- OutputChannel 프록시로 백그라운드 실행 (WebView 불필요)
+
+#### Task 11-2: 인라인 코드 완성
+- **inlineCompletionProvider.ts** 신규 (~180줄): VS Code InlineCompletionItemProvider
+- D18에 따른 의도적 트리거 전용 (InlineCompletionTriggerKind.Invoke만)
+- 30초 캐시 (100개 한도), bridge/MCP 소스 선택
+- `triggerInlineCompletion` 수동 트리거 커맨드 (Ctrl+Shift+L)
+
+#### Task 11-3: 완성 컨텍스트 빌더
+- **completionContextBuilder.ts** 신규 (~130줄): 커서 위치 기반 컨텍스트 조립
+- 포함: 커서 전후 코드, 임포트, LSP 심볼 (현재 스코프), 근처 진단, 프로젝트 규칙
+- 토큰 버짓: ~2000토큰 (8000 chars)
+
+#### Task 11-4: MCP + UI 통합
+- `get_pending_completion` MCP 도구 추가 (12→13개)
+- 컨트롤 패널: toggleBackgroundAgent, triggerCompletion 핸들러
+
+#### 테스트 & 설정
+- 새 설정 4개: `backgroundAgentMode`, `backgroundAgentTrigger`, `inlineCompletionEnabled`, `inlineCompletionSource`
+- 새 커맨드 2개: `toggleBackgroundAgent`, `triggerInlineCompletion`
+- 새 단축키: Ctrl+Shift+L (인라인 완성)
+- 신규 테스트 ~18개: backgroundAgent (9), inlineCompletion (5), completionContextBuilder (6)
+- 설계 결정: D20 (백그라운드 Agent 안전장치)
+
 ### 2026-03-18 — Phase 10 구현 (LSP 기반 코드베이스 인덱싱)
 
 #### Task 10-1: LSP 심볼 인덱서

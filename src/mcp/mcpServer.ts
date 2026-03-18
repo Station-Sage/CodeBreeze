@@ -11,7 +11,8 @@
  * Tools exposed:
  *   read_file, write_file, get_errors, get_git_diff, get_git_log,
  *   run_build, get_project_map, apply_code, list_files,
- *   search_symbols, find_references, get_lsp_project_map
+ *   search_symbols, find_references, get_lsp_project_map,
+ *   get_pending_completion
  */
 import * as http from 'http';
 import * as fs from 'fs';
@@ -29,6 +30,7 @@ import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { parseClipboard } from '../apply/markdownParser';
 import { indexWorkspace, searchSymbols, getAllSymbolsFlat } from '../collect/lspIndexer';
 import { findReferencesByName } from '../collect/lspReferences';
+import { getPendingCompletionRequest } from '../providers/inlineCompletionProvider';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -175,6 +177,14 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
       return { map: map || '(empty project or LSP unavailable)' };
     }
 
+    case 'get_pending_completion': {
+      const payload = getPendingCompletionRequest();
+      return {
+        hasPending: !!payload,
+        context: payload || '(no pending completion request)',
+      };
+    }
+
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -271,6 +281,10 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
     {},
     async () => toContent(await callTool('get_lsp_project_map', {})));
 
+  mcpServer.tool('get_pending_completion', 'Get pending inline completion request context (if any)',
+    {},
+    async () => toContent(await callTool('get_pending_completion', {})));
+
   // ── HTTP server with StreamableHTTP transport ──
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   await mcpServer.connect(transport);
@@ -289,7 +303,7 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
 
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', version: '1.0', tools: 12 }));
+      res.end(JSON.stringify({ status: 'ok', version: '1.0', tools: 13 }));
       return;
     }
 

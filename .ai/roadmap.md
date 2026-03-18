@@ -167,8 +167,15 @@ Cursor agent 수준의 자동화를 위한 개선사항 구현.
 - **MCP 도구 확장** (Task 10-3): `search_symbols`, `find_references`, `get_lsp_project_map` 도구 추가 (9→12개)
 - **Smart Context 자동 선택** (Task 10-4): `smartContextMode` 설정 ('manual'/'auto'), LSP 맵 + 에러 참조 자동 수집
 
-### 남은 작업 (구현 후보, Phase 11+)
-- [ ] 백그라운드 Agent + 인라인 코드 완성 (Phase 11)
+## Phase 11: 백그라운드 Agent + 인라인 코드 완성 ✅ 완료 (2026-03-18)
+### 구현 내용
+- **백그라운드 Agent** (Task 11-1): `backgroundAgent.ts`, 진단 모니터링 + 자동 Agent Loop 트리거, 5초 디바운스, 30초 최소 간격, 연속 3회 제한 + 60초 쿨다운, 상태바 표시, `backgroundAgentMode`/`backgroundAgentTrigger` 설정
+- **인라인 코드 완성** (Task 11-2): `inlineCompletionProvider.ts`, VS Code InlineCompletionItemProvider, D18에 따른 의도적 트리거 전용 (Invoke만), 30초 캐시, bridge/MCP 소스 선택
+- **완성 컨텍스트 빌더** (Task 11-3): `completionContextBuilder.ts`, 커서 위치 기반 코드 + 임포트 + LSP 심볼 + 진단 + 규칙 조합, 토큰 버짓 (2000토큰)
+- **MCP 도구** (Task 11-4): `get_pending_completion` 도구 추가 (12→13개)
+- **UI**: 컨트롤 패널 Background Agent 토글 + Trigger Completion 버튼
+
+### 남은 작업 (구현 후보, Phase 12+)
 - [ ] CLI + CI/CD + MCP 도구 확장 (Phase 12)
 - [ ] 플러그인/커넥터 아키텍처 (Phase 13)
 

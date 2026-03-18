@@ -58,6 +58,22 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(startIncrementalWatcher());
   }).catch(() => { /* LSP indexer optional */ });
 
+  // Register inline completion provider (Phase 11)
+  import('./providers/inlineCompletionProvider').then(({ CodeBreezeInlineCompletionProvider }) => {
+    const provider = new CodeBreezeInlineCompletionProvider();
+    context.subscriptions.push(
+      vscode.languages.registerInlineCompletionItemProvider({ pattern: '**' }, provider)
+    );
+  }).catch(() => { /* Inline completion optional */ });
+
+  // Auto-start background agent if configured (Phase 11)
+  import('./bridge/backgroundAgent').then(({ startBackgroundAgent }) => {
+    const bgMode = vscode.workspace.getConfiguration('codebreeze').get<string>('backgroundAgentMode');
+    if (bgMode && bgMode !== 'off') {
+      startBackgroundAgent(context);
+    }
+  }).catch(() => { /* Background agent optional */ });
+
   // Update status bar on diagnostics change
   onDiagnosticsChanged((errors, _warnings) => {
     if (errors > 0) {
@@ -127,6 +143,14 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       await vscode.env.clipboard.writeText(map);
       vscode.window.showInformationMessage('CodeBreeze: LSP project map copied to clipboard');
+    }],
+    ['codebreeze.toggleBackgroundAgent', async () => {
+      const { toggleBackgroundAgent } = await import('./bridge/backgroundAgent');
+      toggleBackgroundAgent(context);
+    }],
+    ['codebreeze.triggerInlineCompletion', async () => {
+      const { triggerInlineCompletion } = await import('./providers/inlineCompletionProvider');
+      return triggerInlineCompletion();
     }],
   ];
 

@@ -88,7 +88,28 @@
 - [x] lspReferences.test.ts — 7개 (ReferenceResult, CallHierarchy, format, limits)
 - [x] mcpServerPhase10.test.ts — 7개 (search_symbols, find_references, get_lsp_project_map, health)
 
-## 미구현 (중기 로드맵, Phase 11+)
-- [ ] 백그라운드 Agent + 인라인 코드 완성 (Phase 11)
+## 완료 — Phase 11: 백그라운드 Agent + 인라인 코드 완성
+- [x] Task 11-1: 백그라운드 Agent
+  - backgroundAgent.ts 신규 (~200줄): 진단 모니터링 → Agent Loop 자동 트리거
+  - 5초 디바운스, 30초 최소 간격, 연속 3회 제한 + 60초 쿨다운
+  - 상태바 표시 (idle/watching/triggered/running/cooldown)
+  - backgroundAgentMode, backgroundAgentTrigger 설정
+- [x] Task 11-2: 인라인 코드 완성
+  - inlineCompletionProvider.ts 신규 (~180줄): InlineCompletionItemProvider
+  - D18: Invoke 트리거만 (자동 완성 비활성), 30초 캐시
+  - triggerInlineCompletion 커맨드 (Ctrl+Shift+L)
+  - inlineCompletionEnabled, inlineCompletionSource 설정
+- [x] Task 11-3: 완성 컨텍스트 빌더
+  - completionContextBuilder.ts 신규 (~130줄): 커서 위치 기반 컨텍스트
+  - 코드 + 임포트 + LSP 심볼 + 진단 + 규칙, 토큰 버짓 2000
+- [x] Task 11-4: MCP + UI 통합
+  - get_pending_completion MCP 도구 추가 (12→13개)
+  - 컨트롤 패널 toggleBackgroundAgent/triggerCompletion 핸들러
+
+## 신규 테스트 (Phase 11)
+- [x] backgroundAgent.test.ts — 9개 (상태, 타이밍, 설정)
+- [x] inlineCompletion.test.ts — 11개 (캐시, 소스, 컨텍스트 빌더)
+
+## 미구현 (중기 로드맵, Phase 12+)
 - [ ] CLI + CI/CD + MCP 도구 확장 (Phase 12)
 - [ ] 플러그인/커넥터 아키텍처 (Phase 13)

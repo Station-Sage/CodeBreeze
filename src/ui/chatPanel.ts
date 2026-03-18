@@ -201,6 +201,14 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           stopAgentLoop();
           break;
         }
+
+        case 'toggleBackgroundAgent':
+          await vscode.commands.executeCommand('codebreeze.toggleBackgroundAgent');
+          break;
+
+        case 'triggerCompletion':
+          await vscode.commands.executeCommand('codebreeze.triggerInlineCompletion');
+          break;
       }
     },
     undefined,

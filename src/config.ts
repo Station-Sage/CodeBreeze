@@ -25,6 +25,10 @@ export interface CodeBreezeConfig {
   rulesFile: string;
   agentLoopAutoApply: 'preview' | 'auto' | 'safe';
   smartContextMode: 'manual' | 'auto';
+  backgroundAgentMode: 'off' | 'bridge';
+  backgroundAgentTrigger: 'auto' | 'notify';
+  inlineCompletionEnabled: boolean;
+  inlineCompletionSource: 'bridge' | 'mcp';
 }
 
 const LOCAL_CONFIG_FILE = '.codebreeze.json';
@@ -54,6 +58,10 @@ export function getConfig(): CodeBreezeConfig {
     rulesFile: vsConfig.get('rulesFile', '.codebreeze-rules.md'),
     agentLoopAutoApply: vsConfig.get('agentLoopAutoApply', 'preview'),
     smartContextMode: vsConfig.get('smartContextMode', 'manual'),
+    backgroundAgentMode: vsConfig.get('backgroundAgentMode', 'off'),
+    backgroundAgentTrigger: vsConfig.get('backgroundAgentTrigger', 'notify'),
+    inlineCompletionEnabled: vsConfig.get('inlineCompletionEnabled', false),
+    inlineCompletionSource: vsConfig.get('inlineCompletionSource', 'bridge'),
   };
 
   const workspaceRoot = getWorkspaceRoot();
