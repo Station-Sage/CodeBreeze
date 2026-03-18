@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { getConfig } from '../config';
 import { formatCodeBlock } from '../utils/markdown';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 export async function copyErrorsForAI(): Promise<void> {
   const markdown = buildErrorsMarkdown();
@@ -10,7 +11,7 @@ export async function copyErrorsForAI(): Promise<void> {
     return;
   }
 
-  await vscode.env.clipboard.writeText(markdown);
+  await writeClipboard(markdown);
   vscode.window.showInformationMessage('CodeBreeze: Errors copied to clipboard');
 }
 

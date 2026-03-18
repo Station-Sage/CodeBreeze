@@ -5,6 +5,7 @@ import { getConfig, getWorkspaceRoot } from '../config';
 import { BuildResult, ParsedError } from '../types';
 import { formatCodeBlock } from '../utils/markdown';
 import { parseErrorOutput } from './errorParser';
+import { writeClipboard } from '../utils/clipboardCompat';
 import * as fs from 'fs';
 
 let lastBuildResult: BuildResult | null = null;
@@ -87,7 +88,7 @@ export async function runCommandAndCopy(command: string): Promise<BuildResult | 
   lastBuildResult = buildResult;
 
   const markdown = buildResultToMarkdown(buildResult, workspaceRoot);
-  await vscode.env.clipboard.writeText(markdown);
+  await writeClipboard(markdown);
 
   const status = result.exitCode === 0 ? 'succeeded' : 'FAILED';
   const msg = `CodeBreeze: Build ${status} (${duration.toFixed(1)}s) — copied to clipboard`;
@@ -108,7 +109,7 @@ export function copyLastBuildLog(): void {
 
   const workspaceRoot = getWorkspaceRoot() || '';
   const markdown = buildResultToMarkdown(lastBuildResult, workspaceRoot);
-  vscode.env.clipboard.writeText(markdown);
+  writeClipboard(markdown);
   vscode.window.showInformationMessage('CodeBreeze: Last build log copied to clipboard');
 }
 

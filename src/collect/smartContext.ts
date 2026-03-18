@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getConfig, getWorkspaceRoot } from '../config';
 import { formatCodeBlock } from '../utils/markdown';
+import { writeClipboard } from '../utils/clipboardCompat';
 import { getDiagnosticsMarkdown } from './errorCollector';
 import { getGitDiff, getCurrentBranch } from './gitCollector';
 import { getLastBuildResult } from './localBuildCollector';
@@ -18,7 +19,7 @@ export async function copySmartContext(): Promise<void> {
     return;
   }
 
-  await vscode.env.clipboard.writeText(markdown);
+  await writeClipboard(markdown);
   vscode.window.showInformationMessage('CodeBreeze: Smart context copied to clipboard');
 }
 

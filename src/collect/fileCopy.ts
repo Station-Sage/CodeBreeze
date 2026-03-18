@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { formatCodeBlock, truncateLines } from '../utils/markdown';
 import { getConfig } from '../config';
 import { splitByBoundary } from './chunkSplitter';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 export async function copyFileForAI(uri?: vscode.Uri): Promise<void> {
   let targetUri = uri;
@@ -26,7 +27,7 @@ export async function copyFileForAI(uri?: vscode.Uri): Promise<void> {
   content = truncateLines(content, config.chunkMaxLines);
 
   const markdown = formatCodeBlock(content, lang, relPath);
-  await vscode.env.clipboard.writeText(markdown);
+  await writeClipboard(markdown);
   vscode.window.showInformationMessage(`CodeBreeze: Copied ${relPath} to clipboard`);
 }
 
@@ -52,7 +53,7 @@ export async function copyMultipleFilesForAI(uris: vscode.Uri[]): Promise<void> 
     return;
   }
 
-  await vscode.env.clipboard.writeText(parts.join('\n\n'));
+  await writeClipboard(parts.join('\n\n'));
   vscode.window.showInformationMessage(`CodeBreeze: Copied ${parts.length} files to clipboard`);
 }
 
@@ -73,7 +74,7 @@ export async function copySelectionForAI(): Promise<void> {
   const header = `// ${relPath} (lines ${startLine}-${endLine})`;
   const markdown = `${header}\n${formatCodeBlock(selectedText, doc.languageId, `${relPath}:${startLine}-${endLine}`)}`;
 
-  await vscode.env.clipboard.writeText(markdown);
+  await writeClipboard(markdown);
   vscode.window.showInformationMessage(
     `CodeBreeze: Copied selection (lines ${startLine}-${endLine}) to clipboard`
   );

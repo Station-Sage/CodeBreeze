@@ -149,7 +149,8 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.window.showInformationMessage('CodeBreeze: No LSP symbols found (try indexing first)');
         return;
       }
-      await vscode.env.clipboard.writeText(map);
+      const { writeClipboard } = await import('./utils/clipboardCompat');
+      await writeClipboard(map);
       vscode.window.showInformationMessage('CodeBreeze: LSP project map copied to clipboard');
     }],
     ['codebreeze.toggleBackgroundAgent', async () => {

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getWorkspaceRoot } from '../config';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 interface FileSymbols {
   filePath: string;
@@ -127,6 +128,6 @@ export async function copyProjectMap(): Promise<void> {
     vscode.window.showInformationMessage('CodeBreeze: No project files found');
     return;
   }
-  await vscode.env.clipboard.writeText(map);
+  await writeClipboard(map);
   vscode.window.showInformationMessage('CodeBreeze: Project map copied to clipboard');
 }

@@ -16,6 +16,7 @@ import { parseClipboard } from '../apply/markdownParser';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { getConfig } from '../config';
 import { updateControlPanel } from '../ui/chatPanel';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -158,7 +159,7 @@ export async function startWsBridge(context: vscode.ExtensionContext): Promise<v
     )
     .then((choice) => {
       if (choice === 'Copy URL') {
-        vscode.env.clipboard.writeText(`ws://127.0.0.1:${port}`);
+        writeClipboard(`ws://127.0.0.1:${port}`);
       }
     });
 }
@@ -317,7 +318,7 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
           })
           .join('\n\n');
 
-        await vscode.env.clipboard.writeText(markdown);
+        await writeClipboard(markdown);
         ws.send(JSON.stringify({ type: 'clipboardReady', count: blocks.length }));
 
         vscode.window

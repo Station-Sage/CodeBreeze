@@ -11,6 +11,7 @@ import { getErrorChainFiles } from '../collect/errorChainCollector';
 import { formatProjectRulesSection } from '../collect/rulesLoader';
 import { getConfig, getWorkspaceRoot } from '../config';
 import { formatCodeBlock } from '../utils/markdown';
+import { writeClipboard } from '../utils/clipboardCompat';
 import * as path from 'path';
 
 /**
@@ -106,7 +107,7 @@ export async function fixErrorWithAI(): Promise<void> {
       );
     } else {
       // No bridge: copy to clipboard
-      await vscode.env.clipboard.writeText(prompt);
+      await writeClipboard(prompt);
       vscode.window.showInformationMessage(
         'CodeBreeze: Error context copied to clipboard. Paste into AI chat, then use Ctrl+Shift+A to apply the fix.',
         'Open AI Chat'
@@ -119,7 +120,7 @@ export async function fixErrorWithAI(): Promise<void> {
     }
   } catch {
     // Bridge module not available — clipboard fallback
-    await vscode.env.clipboard.writeText(prompt);
+    await writeClipboard(prompt);
     vscode.window.showInformationMessage(
       'CodeBreeze: Error context copied. Paste into AI chat, then Ctrl+Shift+A to apply.'
     );

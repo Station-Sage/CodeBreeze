@@ -192,7 +192,8 @@ export async function triggerInlineCompletion(): Promise<void> {
     }
   } else {
     // Copy to clipboard for manual paste
-    await vscode.env.clipboard.writeText(contextPayload);
+    const { writeClipboard } = await import('../utils/clipboardCompat');
+    await writeClipboard(contextPayload);
     vscode.window.showInformationMessage('CodeBreeze: Completion context copied to clipboard');
   }
 }

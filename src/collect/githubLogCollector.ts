@@ -3,6 +3,7 @@ import * as https from 'https';
 import AdmZip from 'adm-zip';
 import { getConfig } from '../config';
 import { getLastBuildResult } from './localBuildCollector';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 export async function copyBuildLogFromGitHub(): Promise<void> {
   // Prefer local build log if available
@@ -43,7 +44,7 @@ export async function copyBuildLogFromGitHub(): Promise<void> {
       return;
     }
 
-    await vscode.env.clipboard.writeText(log);
+    await writeClipboard(log);
     vscode.window.showInformationMessage('CodeBreeze: GitHub Actions log copied to clipboard');
   } catch (err) {
     vscode.window.showErrorMessage(

@@ -31,6 +31,7 @@ import { parseClipboard } from '../apply/markdownParser';
 import { indexWorkspace, searchSymbols, getAllSymbolsFlat } from '../collect/lspIndexer';
 import { findReferencesByName } from '../collect/lspReferences';
 import { getPendingCompletionRequest } from '../providers/inlineCompletionProvider';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -362,7 +363,7 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
     )
     .then((choice) => {
       if (choice === 'Copy URL') {
-        vscode.env.clipboard.writeText(`http://127.0.0.1:${port}`);
+        writeClipboard(`http://127.0.0.1:${port}`);
       }
     });
 }

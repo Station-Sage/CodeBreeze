@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { execSync } from '../utils/exec';
 import { getConfig, getWorkspaceRoot } from '../config';
+import { writeClipboard } from '../utils/clipboardCompat';
 
 export async function copyGitDiffForAI(): Promise<void> {
   const workspaceRoot = getWorkspaceRoot();
@@ -40,7 +41,7 @@ export async function copyGitDiffForAI(): Promise<void> {
 
   const branch = execSync('git branch --show-current', workspaceRoot).trim();
   const header = `## Git Diff (${mode}) — branch: ${branch}\n\n`;
-  await vscode.env.clipboard.writeText(header + '```diff\n' + diff + '\n```');
+  await writeClipboard(header + '```diff\n' + diff + '\n```');
   vscode.window.showInformationMessage('CodeBreeze: Git diff copied to clipboard');
 }
 
@@ -62,7 +63,7 @@ export async function copyGitLogForAI(): Promise<void> {
   const branch = execSync('git branch --show-current', workspaceRoot).trim();
   const markdown = `## Git Log — branch: ${branch}\n\n\`\`\`\n${log}\n\`\`\``;
 
-  await vscode.env.clipboard.writeText(markdown);
+  await writeClipboard(markdown);
   vscode.window.showInformationMessage('CodeBreeze: Git log copied to clipboard');
 }
 
