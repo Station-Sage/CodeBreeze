@@ -95,3 +95,32 @@
 - **원인**: `sendBridgeStatus` (chatPanel.ts), `getConnectionCount` (wsBridgeServer.ts) 각각 2회 선언
 - **수정**: 중복 함수 선언 제거
 - **상태**: 수정 완료 (2026-03-17)
+
+## B-011: clipboardCompat isCodeServer() 환경 감지 실패
+- **발견**: 2026-03-18
+- **증상**: code-server (Android Kiwi Browser 등) 환경에서 `isCodeServer()` false → 클립보드 실패 시 fallback UI 미표시
+- **원인**: `process.env.VSCODE_AGENT_FOLDER` / `CS_DISABLE_FILE_DOWNLOADS` 환경 변수가 모든 code-server 환경에 없음. `vscode.env.remoteName`은 Remote-SSH에서도 true.
+- **수정**:
+  - `isCodeServer()`: `vscode.env.uriScheme === 'http'/'https'` 기반 감지로 변경
+  - `writeClipboard()`: clipboard write→readback 실패 캐싱, "Open Manual Paste" 버튼 추가
+- **상태**: 수정 완료 (2026-03-18)
+
+## B-012: Browser Bridge 자동 시작 설정 미존재
+- **발견**: 2026-03-18
+- **증상**: VS Code 시작 시 매번 `Ctrl+Shift+P → Start Browser Bridge` 수동 실행 필요
+- **원인**: `autoStartBridge` 설정 미존재
+- **수정**:
+  - `package.json`: `codebreeze.autoStartBridge` boolean 설정 추가 (기본: false)
+  - `config.ts`: `autoStartBridge` 속성 추가
+  - `extension.ts`: `activate()`에서 설정 확인 후 자동 `startWsBridge()` 호출
+- **상태**: 수정 완료 (2026-03-18)
+
+## B-013: 브라우저 확장 Service Worker 비활성화 시 WebSocket 끊김
+- **발견**: 2026-03-18
+- **증상**: Manifest V3 Service Worker가 30초 후 비활성화되면 `setInterval` 멈추고 WebSocket 끊김. 팝업 열어도 끊긴 상태 유지.
+- **원인**: `setInterval`은 Service Worker lifecycle에서 신뢰할 수 없음 (Chrome이 worker를 종료시킴)
+- **수정**:
+  - `manifest.json`: `alarms` permission 추가
+  - `background.js`: `setInterval` → `chrome.alarms.create()` (24초 간격) 으로 keep-alive + 자동 재연결
+  - `popup.js`: 팝업 open 시 연결 상태 확인 → 끊긴 경우 자동 재연결 시도
+- **상태**: 수정 완료 (2026-03-18)

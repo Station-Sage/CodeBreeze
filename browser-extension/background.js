@@ -131,6 +131,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
       disconnect();
       break;
 
+    case 'getConnectionState':
+      // Sync actual WS state to storage (popup queries this on open)
+      chrome.storage.local.set({
+        wsConnected: !!(ws && ws.readyState === WebSocket.OPEN),
+      });
+      break;
+
     case 'selectorTestResult':
       // Forward to popup — no VS Code routing needed
       break;
@@ -143,9 +150,22 @@ chrome.storage.local.get(['wsPort'], (data) => {
   connect(port);
 });
 
-// ── Keep-alive ping (Manifest V3 service worker stays alive) ──
-setInterval(() => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'ping' }));
+// ── Keep-alive via chrome.alarms (Service Worker safe) ──
+const KEEPALIVE_ALARM = 'codebreeze-keepalive';
+
+chrome.alarms.create(KEEPALIVE_ALARM, { periodInMinutes: 0.4 }); // ~24s
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === KEEPALIVE_ALARM) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'ping' }));
+    } else if (!ws || ws.readyState === WebSocket.CLOSED) {
+      // Auto-reconnect if disconnected
+      chrome.storage.local.get(['wsPort'], (data) => {
+        const port = data.wsPort || 3701;
+        reconnectAttempts = 0;
+        connect(port);
+      });
+    }
   }
-}, 25000);
+});

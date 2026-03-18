@@ -66,6 +66,14 @@ export function activate(context: vscode.ExtensionContext): void {
     );
   }).catch(() => { /* Inline completion optional */ });
 
+  // Auto-start Browser Bridge if configured (B-012)
+  const autoStartBridge = vscode.workspace.getConfiguration('codebreeze').get<boolean>('autoStartBridge');
+  if (autoStartBridge) {
+    import('./bridge/wsBridgeServer').then(({ startWsBridge }) => {
+      startWsBridge(context);
+    }).catch(() => { /* Bridge auto-start optional */ });
+  }
+
   // Auto-start background agent if configured (Phase 11)
   import('./bridge/backgroundAgent').then(({ startBackgroundAgent }) => {
     const bgMode = vscode.workspace.getConfiguration('codebreeze').get<string>('backgroundAgentMode');
