@@ -37,6 +37,7 @@ const COOLDOWN_MS = 60_000; // 60s cooldown after max consecutive runs
 const DEBOUNCE_MS = 5_000; // 5s debounce after error detection
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let backgroundOutputChannel: vscode.OutputChannel | null = null;
 
 export function isBackgroundAgentEnabled(): boolean {
   return state.enabled;
@@ -165,9 +166,11 @@ async function tryTriggerAgentLoop(): Promise<void> {
       return;
     }
 
-    // Create a minimal webview proxy for background notifications
-    const outputChannel = vscode.window.createOutputChannel('CodeBreeze Background Agent');
-    const proxyWebview = createBackgroundWebviewProxy(outputChannel);
+    // B-016: reuse a single OutputChannel instead of creating one per trigger
+    if (!backgroundOutputChannel) {
+      backgroundOutputChannel = vscode.window.createOutputChannel('CodeBreeze Background Agent');
+    }
+    const proxyWebview = createBackgroundWebviewProxy(backgroundOutputChannel);
     await startAgentLoop(proxyWebview);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -245,6 +248,9 @@ export function stopBackgroundAgent(): void {
     clearTimeout(state.cooldownTimer);
     state.cooldownTimer = null;
   }
+  // B-016: dispose the OutputChannel on stop
+  backgroundOutputChannel?.dispose();
+  backgroundOutputChannel = null;
 
   setStatus('idle');
   vscode.window.showInformationMessage('CodeBreeze: Background agent stopped');

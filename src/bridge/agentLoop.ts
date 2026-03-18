@@ -341,7 +341,11 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
 export function stopAgentLoop(): void {
   if (state.active) {
     state.abortRequested = true;
-    state.resolveResponse = null;
+    // B-015: reject the pending Promise instead of leaving it dangling
+    if (state.resolveResponse) {
+      state.resolveResponse([]);
+      state.resolveResponse = null;
+    }
     notify('Agent loop stop requested...');
   }
 }

@@ -18,9 +18,10 @@ export async function createUndoPoint(): Promise<UndoPoint | null> {
     // Try git stash
     const status = execSync('git status --porcelain', workspaceRoot);
     if (status.trim()) {
-      execSync('git stash push -m "codebreeze-before-apply"', workspaceRoot);
-      const stashRef = 'stash@{0}';
-      lastUndoPoint = { type: 'git_stash', stashRef, timestamp: Date.now() };
+      // B-020: use unique stash message to avoid positional ref race condition
+      const stashTag = `codebreeze-${Date.now()}`;
+      execSync(`git stash push -m "${stashTag}"`, workspaceRoot);
+      lastUndoPoint = { type: 'git_stash', stashRef: stashTag, timestamp: Date.now() };
       return lastUndoPoint;
     }
   } catch (err) {
@@ -42,7 +43,16 @@ export async function undoLastApply(): Promise<boolean> {
 
   if (lastUndoPoint.type === 'git_stash' && lastUndoPoint.stashRef) {
     try {
-      execSync(`git stash pop ${lastUndoPoint.stashRef}`, workspaceRoot);
+      // B-020: find stash by unique message tag instead of positional ref
+      const stashTag = lastUndoPoint.stashRef;
+      const stashList = execSync('git stash list --format=%gd:%s', workspaceRoot);
+      const match = stashList.split('\n').find((line) => line.includes(stashTag));
+      if (!match) {
+        vscode.window.showErrorMessage('CodeBreeze: Stash entry not found — may have been dropped');
+        return false;
+      }
+      const stashIndex = match.split(':')[0]; // e.g. "stash@{2}"
+      execSync(`git stash pop ${stashIndex}`, workspaceRoot);
       vscode.window.showInformationMessage('CodeBreeze: Reverted to pre-apply state via git stash');
       lastUndoPoint = null;
       return true;
