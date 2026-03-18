@@ -50,8 +50,10 @@ export async function copyGitLogForAI(): Promise<void> {
   if (!workspaceRoot) return;
 
   const config = getConfig();
+  // B-022: clamp gitLogCount to prevent excessive output
+  const count = Math.max(1, Math.min(config.gitLogCount, 500));
   const log = execSync(
-    `git log --oneline -${config.gitLogCount} --format="%h %s (%an, %ar)"`,
+    `git log --oneline -${count} --format="%h %s (%an, %ar)"`,
     workspaceRoot
   );
 

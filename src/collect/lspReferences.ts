@@ -46,7 +46,8 @@ export async function findReferences(
     const wordRange = doc.getWordRangeAtPosition(position);
     const symbolName = wordRange ? doc.getText(wordRange) : 'unknown';
 
-    const refs = await Promise.all(
+    // B-023: use allSettled so one failed doc open doesn't lose all results
+    const settled = await Promise.allSettled(
       locations
         .filter((loc) => includeDeclaration || !loc.range.isEqual(new vscode.Range(position, position)))
         .slice(0, 50) // limit results
@@ -60,6 +61,9 @@ export async function findReferences(
           };
         })
     );
+    const refs = settled
+      .filter((r): r is PromiseFulfilledResult<{ file: string; line: number; preview: string }> => r.status === 'fulfilled')
+      .map((r) => r.value);
 
     return {
       symbol: symbolName,

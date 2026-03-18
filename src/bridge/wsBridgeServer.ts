@@ -211,6 +211,7 @@ export function broadcastToBrowser(data: Record<string, unknown>, expectAck = fa
 }
 
 function scheduleRetry(msgId: string, data: unknown): void {
+  // B-021: single timer per retry cycle — no nested setTimeout
   const timer = setTimeout(() => {
     const pending = pendingMessages.get(msgId);
     if (!pending) return;
@@ -227,17 +228,19 @@ function scheduleRetry(msgId: string, data: unknown): void {
     connections.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) ws.send(json);
     });
-    pending.timer = setTimeout(() => {
+
+    // Re-schedule a single new timer for the next retry
+    const nextTimer = setTimeout(() => {
       const p = pendingMessages.get(msgId);
-      if (p) {
-        if (p.attempts >= MAX_RETRY_ATTEMPTS) {
-          log(`✗ ACK timeout after ${MAX_RETRY_ATTEMPTS} retries: ${msgId}`);
-          pendingMessages.delete(msgId);
-        } else {
-          scheduleRetry(msgId, data);
-        }
+      if (!p) return;
+      if (p.attempts >= MAX_RETRY_ATTEMPTS) {
+        log(`✗ ACK timeout after ${MAX_RETRY_ATTEMPTS} retries: ${msgId}`);
+        pendingMessages.delete(msgId);
+      } else {
+        scheduleRetry(msgId, data);
       }
     }, ACK_TIMEOUT_MS);
+    pending.timer = nextTimer;
   }, ACK_TIMEOUT_MS);
 
   pendingMessages.set(msgId, { msgId, data, attempts: 0, timer });

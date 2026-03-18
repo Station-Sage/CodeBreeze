@@ -121,6 +121,13 @@ function githubGet(path: string, token: string): Promise<unknown> {
     };
 
     https.get(options, (res) => {
+      // B-027: check HTTP status code
+      if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+        let body = '';
+        res.on('data', (chunk: string) => (body += chunk));
+        res.on('end', () => reject(new Error(`GitHub API ${res.statusCode}: ${body.slice(0, 200)}`)));
+        return;
+      }
       let data = '';
       res.on('data', (chunk: string) => (data += chunk));
       res.on('end', () => {

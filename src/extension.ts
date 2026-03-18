@@ -27,6 +27,12 @@ import { registerDiagnosticsMonitor, onDiagnosticsChanged } from './monitor/diag
 import { registerGitEventMonitor } from './monitor/gitEventMonitor';
 
 export function activate(context: vscode.ExtensionContext): void {
+  // B-030: clean up stale pending files from previous sessions
+  import('./apply/nativeDiffPreview').then(({ cleanupStalePendingFiles }) => {
+    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (root) cleanupStalePendingFiles(root);
+  }).catch(() => { /* optional cleanup */ });
+
   // Initialize stores
   initHistoryStore(context);
   initStatusBar(context);

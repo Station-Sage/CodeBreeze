@@ -29,6 +29,12 @@ export async function showNativeDiff(block: CodeBlock): Promise<boolean> {
   const isNewFile = !originalUri;
   const actualOriginalUri = originalUri || vscode.Uri.file(path.join(wsRoot, block.filePath));
 
+  // B-037: ensure parent directory exists for new files
+  const parentDir = path.dirname(actualOriginalUri.fsPath);
+  if (!fs.existsSync(parentDir)) {
+    fs.mkdirSync(parentDir, { recursive: true });
+  }
+
   // Write pending content to temp file
   const pendingPath = actualOriginalUri.fsPath + PENDING_SUFFIX;
   fs.writeFileSync(pendingPath, block.content, 'utf8');
@@ -134,9 +140,33 @@ function cleanupPendingFile(pendingPath: string): void {
   pendingFiles.delete(pendingPath);
 }
 
-/** Clean up all pending files (call on deactivate) */
+/** Clean up all pending files (call on deactivate or crash recovery) */
 export function cleanupAllPending(): void {
   for (const pendingPath of pendingFiles.keys()) {
     cleanupPendingFile(pendingPath);
   }
+}
+
+/**
+ * B-030: Clean up stale pending files from previous sessions.
+ * Scans workspace for leftover .codebreeze-pending / .codebreeze-empty files.
+ */
+export function cleanupStalePendingFiles(workspaceRoot: string): void {
+  try {
+    const walkAndClean = (dir: string, depth: number) => {
+      if (depth > 4) return;
+      let entries: fs.Dirent[];
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        if (e.name === 'node_modules' || e.name === '.git') continue;
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          walkAndClean(full, depth + 1);
+        } else if (e.name.endsWith(PENDING_SUFFIX) || e.name.endsWith('.codebreeze-empty')) {
+          try { fs.unlinkSync(full); } catch { /* ignore */ }
+        }
+      }
+    };
+    walkAndClean(workspaceRoot, 0);
+  } catch { /* ignore */ }
 }

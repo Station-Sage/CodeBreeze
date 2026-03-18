@@ -322,8 +322,11 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
   await mcpServer.connect(transport);
 
   httpServer = http.createServer(async (req, res) => {
-    // CORS for local AI clients
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // B-025: CORS restricted to localhost origins only
+    const origin = req.headers.origin || '';
+    const allowedOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ? origin : 'http://127.0.0.1';
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, MCP-Session-Id');
 
