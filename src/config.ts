@@ -24,6 +24,7 @@ export interface CodeBreezeConfig {
   diffPreviewMode: 'native' | 'inline';
   rulesFile: string;
   agentLoopAutoApply: 'preview' | 'auto' | 'safe';
+  smartContextMode: 'manual' | 'auto';
 }
 
 const LOCAL_CONFIG_FILE = '.codebreeze.json';
@@ -52,6 +53,7 @@ export function getConfig(): CodeBreezeConfig {
     diffPreviewMode: vsConfig.get('diffPreviewMode', 'native'),
     rulesFile: vsConfig.get('rulesFile', '.codebreeze-rules.md'),
     agentLoopAutoApply: vsConfig.get('agentLoopAutoApply', 'preview'),
+    smartContextMode: vsConfig.get('smartContextMode', 'manual'),
   };
 
   const workspaceRoot = getWorkspaceRoot();

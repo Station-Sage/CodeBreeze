@@ -145,6 +145,16 @@
         "command": "codebreeze.fixErrorWithAI",
         "title": "Fix Error with AI",
         "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.indexWorkspace",
+        "title": "Index Workspace (LSP Symbols)",
+        "category": "CodeBreeze"
+      },
+      {
+        "command": "codebreeze.copyLspProjectMap",
+        "title": "Copy LSP Project Map for AI",
+        "category": "CodeBreeze"
       }
     ],
     "keybindings": [
@@ -405,6 +415,12 @@
           "enum": ["preview", "auto", "safe"],
           "default": "preview",
           "description": "Agent Loop apply mode: 'preview' shows diff editor, 'auto' applies automatically, 'safe' auto-applies only if tests pass"
+        },
+        "codebreeze.smartContextMode": {
+          "type": "string",
+          "enum": ["manual", "auto"],
+          "default": "manual",
+          "description": "Smart Context mode: 'manual' includes only standard context, 'auto' adds LSP symbols and error references automatically"
         }
       }
     }

@@ -8,6 +8,8 @@ import { getGitDiff, getCurrentBranch } from './gitCollector';
 import { getLastBuildResult } from './localBuildCollector';
 import { getProjectMap } from './projectMapCollector';
 import { formatProjectRulesSection } from './rulesLoader';
+import { getLspProjectMap, indexWorkspace } from './lspIndexer';
+import { findReferencesByName, formatReferencesMarkdown } from './lspReferences';
 
 export async function copySmartContext(): Promise<void> {
   const markdown = await buildSmartContext();
@@ -80,6 +82,38 @@ export async function buildSmartContext(): Promise<string> {
       } catch {
         // ignore
       }
+    }
+  }
+
+  // 6. Auto-mode: LSP-enhanced project map + related symbols
+  const config = getConfig();
+  if (config.smartContextMode === 'auto') {
+    try {
+      const lspMap = await getLspProjectMap();
+      if (lspMap) {
+        parts.push(lspMap);
+      }
+
+      // Auto-collect references for symbols at error locations
+      if (editor) {
+        const doc = editor.document;
+        const diagnostics = vscode.languages.getDiagnostics(doc.uri);
+        const errorSymbols = new Set<string>();
+        for (const diag of diagnostics.slice(0, 5)) {
+          if (diag.severity === vscode.DiagnosticSeverity.Error) {
+            const wordRange = doc.getWordRangeAtPosition(diag.range.start);
+            if (wordRange) errorSymbols.add(doc.getText(wordRange));
+          }
+        }
+        for (const sym of errorSymbols) {
+          const refs = await findReferencesByName(sym);
+          if (refs && refs.references.length > 0) {
+            parts.push(formatReferencesMarkdown(refs));
+          }
+        }
+      }
+    } catch {
+      // LSP not available, skip
     }
   }
 
@@ -157,6 +191,12 @@ export async function buildContextPayload(types: string[], includeRules = true):
       case 'projectMap': {
         const map = await getProjectMap();
         if (map) parts.push(map);
+        break;
+      }
+
+      case 'lspProjectMap': {
+        const lspMap = await getLspProjectMap();
+        if (lspMap) parts.push(lspMap);
         break;
       }
     }

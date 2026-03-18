@@ -138,9 +138,39 @@ Cursor agent 수준의 자동화를 위한 개선사항 구현.
 - `config.ts`: 4개 신규 설정 필드
 
 ### 남은 작업 (구현 후보)
-- [ ] VS Code diff editor 통합 (`vscode.diff` 명령으로 비교 UI 표시)
+- [x] VS Code diff editor 통합 → Phase 8-1에서 구현 완료
 - [ ] 스트리밍 모드: AI 응답 토큰 단위 표시 (현재 완성 후 일괄)
-- [ ] 멀티 파일 일괄 diff 미리보기
+- [x] 멀티 파일 일괄 diff 미리보기 → Phase 8-1에서 구현 완료
+
+## Phase 7: 브라우저 브릿지 실전화 ✅ 완료 (2026-03-18)
+### 구현 내용
+- **셀렉터 폴백 체인** (Task 7-2): content.js SITE_CONFIG에 배열 기반 다단계 셀렉터, 범용 폴백, 셀렉터 version 필드, popup.html "Test Selectors" 버튼, 코드 블록 중복 감지
+- **브릿지 신뢰성** (Task 7-3): OutputChannel 로그, ACK 프로토콜(msgId), 재전송 큐(최대 3회, 5초 타임아웃), `getBridgeConnectionState()`, 상태바 클라이언트 수 표시
+- **클립보드 파싱 강화** (Task 7-4): 불완전 코드 블록 감지(경고 + 최선 추측), 대용량 청크 파싱(100KB+)
+
+## Phase 8: VS Code 네이티브 통합 + 프로젝트 규칙 ✅ 완료 (2026-03-18)
+### 구현 내용
+- **VS Code diff editor** (Task 8-1): `nativeDiffPreview.ts`, `vscode.diff` 명령, Accept/Reject, 멀티 파일 일괄 diff, `diffPreviewMode` 설정
+- **프로젝트 규칙 시스템** (Task 8-2): `rulesLoader.ts`, `.codebreeze-rules.md` 로드/캐시, Smart Context + Agent Loop 자동 prepend
+- **원클릭 에러 수정** (Task 8-3): `fixWithAI.ts`, 에러+코드+규칙 조합 프롬프트, 브릿지/클립보드 분기, Ctrl+Shift+F
+
+## Phase 9: Agent Loop 고도화 ✅ 완료 (2026-03-18)
+### 구현 내용
+- **다단계 전략** (Task 9-1): `promptBuilder.ts`, Phase-aware 루프 (Analyze→Request→Waiting→Apply→Verify), 이전 시도 히스토리 누적
+- **자동 적용 모드** (Task 9-2): `agentLoopAutoApply` 설정 ('preview'/'auto'/'safe'), safe=테스트 통과 시만 적용
+- **진행 상황 UI** (Task 9-3): 실시간 프로그레스 바 (단계, iteration, 시간 경과)
+
+## Phase 10: LSP 기반 코드베이스 인덱싱 ✅ 완료 (2026-03-18)
+### 구현 내용
+- **LSP 심볼 인덱서** (Task 10-1): `lspIndexer.ts`, DocumentSymbolProvider 기반, 증분 업데이트, 300파일 워크스페이스 캐시, `searchSymbols`, `getLspProjectMap`
+- **참조 추적 + 콜 계층** (Task 10-2): `lspReferences.ts`, ReferenceProvider + CallHierarchyProvider, `findReferencesByName`, 마크다운 포맷터
+- **MCP 도구 확장** (Task 10-3): `search_symbols`, `find_references`, `get_lsp_project_map` 도구 추가 (9→12개)
+- **Smart Context 자동 선택** (Task 10-4): `smartContextMode` 설정 ('manual'/'auto'), LSP 맵 + 에러 참조 자동 수집
+
+### 남은 작업 (구현 후보, Phase 11+)
+- [ ] 백그라운드 Agent + 인라인 코드 완성 (Phase 11)
+- [ ] CLI + CI/CD + MCP 도구 확장 (Phase 12)
+- [ ] 플러그인/커넥터 아키텍처 (Phase 13)
 
 ## 설계 원칙 — 확장 방향에 걸쳐 공통
 1. 기존 모듈(apply/, collect/, monitor/) 재사용

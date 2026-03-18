@@ -53,6 +53,11 @@ export function activate(context: vscode.ExtensionContext): void {
   registerDiagnosticsMonitor(context);
   registerGitEventMonitor(context);
 
+  // Start LSP incremental indexer (Phase 10)
+  import('./collect/lspIndexer').then(({ startIncrementalWatcher }) => {
+    context.subscriptions.push(startIncrementalWatcher());
+  }).catch(() => { /* LSP indexer optional */ });
+
   // Update status bar on diagnostics change
   onDiagnosticsChanged((errors, _warnings) => {
     if (errors > 0) {
@@ -104,6 +109,24 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.fixErrorWithAI', async () => {
       const { fixErrorWithAI } = await import('./commands/fixWithAI');
       return fixErrorWithAI();
+    }],
+    ['codebreeze.indexWorkspace', async () => {
+      const { indexWorkspace, getIndexedFileCount } = await import('./collect/lspIndexer');
+      await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Notification, title: 'CodeBreeze: Indexing workspace...' },
+        async () => { await indexWorkspace(true); }
+      );
+      vscode.window.showInformationMessage(`CodeBreeze: Indexed ${getIndexedFileCount()} files`);
+    }],
+    ['codebreeze.copyLspProjectMap', async () => {
+      const { getLspProjectMap } = await import('./collect/lspIndexer');
+      const map = await getLspProjectMap();
+      if (!map) {
+        vscode.window.showInformationMessage('CodeBreeze: No LSP symbols found (try indexing first)');
+        return;
+      }
+      await vscode.env.clipboard.writeText(map);
+      vscode.window.showInformationMessage('CodeBreeze: LSP project map copied to clipboard');
     }],
   ];
 

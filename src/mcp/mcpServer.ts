@@ -10,7 +10,8 @@
  *
  * Tools exposed:
  *   read_file, write_file, get_errors, get_git_diff, get_git_log,
- *   run_build, get_project_map, apply_code, list_files
+ *   run_build, get_project_map, apply_code, list_files,
+ *   search_symbols, find_references, get_lsp_project_map
  */
 import * as http from 'http';
 import * as fs from 'fs';
@@ -26,6 +27,8 @@ import { getLastBuildResult } from '../collect/localBuildCollector';
 import { getProjectMap } from '../collect/projectMapCollector';
 import { applyCodeBlocksHeadless } from '../apply/clipboardApply';
 import { parseClipboard } from '../apply/markdownParser';
+import { indexWorkspace, searchSymbols, getAllSymbolsFlat } from '../collect/lspIndexer';
+import { findReferencesByName } from '../collect/lspReferences';
 
 // ── Server state ──────────────────────────────────────────────────────────
 
@@ -132,6 +135,46 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
       return { files };
     }
 
+    case 'search_symbols': {
+      const query = String(params.query || '');
+      if (!query) throw new Error('query is required');
+      await indexWorkspace();
+      const matches = searchSymbols(query);
+      return {
+        query,
+        resultCount: matches.length,
+        symbols: matches.slice(0, 50).map((s) => ({
+          name: s.name,
+          kind: vscode.SymbolKind[s.kind],
+          file: s.file,
+          startLine: s.range.startLine + 1,
+          endLine: s.range.endLine + 1,
+        })),
+      };
+    }
+
+    case 'find_references': {
+      const symName = String(params.symbol || '');
+      if (!symName) throw new Error('symbol name is required');
+      const fileHint = params.file ? String(params.file) : undefined;
+      const result = await findReferencesByName(symName, fileHint);
+      if (!result) return { symbol: symName, found: false, references: [] };
+      return {
+        symbol: result.symbol,
+        found: true,
+        definitionFile: result.definitionFile,
+        definitionLine: result.definitionLine,
+        referenceCount: result.references.length,
+        references: result.references.slice(0, 30),
+      };
+    }
+
+    case 'get_lsp_project_map': {
+      const { getLspProjectMap } = await import('../collect/lspIndexer');
+      const map = await getLspProjectMap();
+      return { map: map || '(empty project or LSP unavailable)' };
+    }
+
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -216,6 +259,18 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
     { dir: z.string().optional(), recursive: z.boolean().optional() },
     async ({ dir, recursive }) => toContent(await callTool('list_files', { dir, recursive })));
 
+  mcpServer.tool('search_symbols', 'Search for symbols (functions, classes, etc.) across the workspace using LSP',
+    { query: z.string() },
+    async ({ query }) => toContent(await callTool('search_symbols', { query })));
+
+  mcpServer.tool('find_references', 'Find all references to a symbol by name',
+    { symbol: z.string(), file: z.string().optional() },
+    async ({ symbol, file }) => toContent(await callTool('find_references', { symbol, file })));
+
+  mcpServer.tool('get_lsp_project_map', 'Get LSP-enhanced project map with accurate symbol information',
+    {},
+    async () => toContent(await callTool('get_lsp_project_map', {})));
+
   // ── HTTP server with StreamableHTTP transport ──
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   await mcpServer.connect(transport);
@@ -234,7 +289,7 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
 
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', version: '1.0', tools: 9 }));
+      res.end(JSON.stringify({ status: 'ok', version: '1.0', tools: 12 }));
       return;
     }
 

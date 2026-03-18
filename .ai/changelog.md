@@ -2,6 +2,40 @@
 
 ## 최근 (최신 3건만 유지 — 이전 항목은 .ai/changelog-archive.md로 이동)
 
+### 2026-03-18 — Phase 10 구현 (LSP 기반 코드베이스 인덱싱)
+
+#### Task 10-1: LSP 심볼 인덱서
+- **lspIndexer.ts** 신규 (~200줄): `vscode.executeDocumentSymbolProvider`로 정확한 심볼 추출
+- 증분 업데이트: `onDidSaveTextDocument` 감지, 파일 삭제 시 캐시 제거
+- 워크스페이스 전체 인덱싱: `indexWorkspace()`, 300파일 한도, 60초 캐시
+- `searchSymbols()`: 이름 패턴 + SymbolKind 필터 검색
+- `getLspProjectMap()`: LSP 기반 프로젝트 맵 (종류별 레이블: ƒ함수, ◆클래스, ◇인터페이스 등)
+- `getAllSymbolsFlat()`: MCP/외부 도구용 평탄화 심볼 목록
+
+#### Task 10-2: 참조 추적 + 콜 계층
+- **lspReferences.ts** 신규 (~170줄): `vscode.executeReferenceProvider` + `vscode.prepareCallHierarchy`
+- `findReferences()`: 위치 기반 참조 검색 (최대 50개)
+- `getCallHierarchy()`: 호출자(callers) + 피호출자(callees) 추적 (최대 30개)
+- `findReferencesByName()`: 이름 기반 참조 검색 (MCP 도구용)
+- `formatReferencesMarkdown()`, `formatCallHierarchyMarkdown()`: AI 컨텍스트용 마크다운 포맷터
+
+#### Task 10-3: MCP 도구 확장
+- `search_symbols` 도구: LSP 심볼 검색 (query 파라미터)
+- `find_references` 도구: 심볼 참조 검색 (symbol + file 파라미터)
+- `get_lsp_project_map` 도구: LSP 기반 프로젝트 맵
+- MCP 도구 수: 9 → 12개
+
+#### Task 10-4: Smart Context 자동 선택 모드
+- `smartContextMode` 설정: 'manual' (기본) / 'auto'
+- auto 모드: LSP 프로젝트 맵 + 에러 위치 심볼 참조 자동 수집
+- `buildContextPayload()`에 'lspProjectMap' 타입 추가
+
+#### 테스트 & 설정
+- 새 설정 1개: `smartContextMode`
+- 새 커맨드 2개: `indexWorkspace`, `copyLspProjectMap`
+- 신규 테스트 ~20개: lspIndexer (8), lspReferences (7), mcpServerPhase10 (7)
+- 설계 결정 1개: D19 (LSP 폴백 전략)
+
 ### 2026-03-18 — Phase 7-9 구현 (브릿지 실전화 + 네이티브 통합 + Agent Loop 고도화)
 
 #### Phase 7: 브라우저 브릿지 실전화

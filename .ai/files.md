@@ -23,8 +23,10 @@
 - errorCollector.ts (~80줄) — Problems 에러 + 주변 코드 → 클립보드
 - localBuildCollector.ts (~200줄) — 빌드/테스트 실행, 출력 캡처, 에러 파싱 (TS/ESLint/GCC/Java/Python/Gradle/Swift/Rust/Go), 결과 저장
 - githubLogCollector.ts (~140줄) — GitHub REST API로 워크플로우 로그 다운로드 + 에러 추출
-- smartContext.ts (~150줄) — 현재 파일 + 에러 + git diff + 프로젝트 규칙 자동 조합; 'projectMap' 케이스 포함 (Phase 8-2 규칙 통합)
+- smartContext.ts (~190줄) — 현재 파일 + 에러 + git diff + 프로젝트 규칙 자동 조합; 'projectMap'/'lspProjectMap' 케이스 포함; `smartContextMode: auto` 시 LSP 심볼 + 에러 참조 자동 추가 (Phase 10-4)
 - projectMapCollector.ts (~160줄) — 8개 언어 정규식 심볼 추출, 200파일 한도, `codebreeze.copyProjectMap` (I-002)
+- lspIndexer.ts (~200줄) — LSP DocumentSymbolProvider 기반 심볼 인덱서, 증분 업데이트, 워크스페이스 캐시, `searchSymbols`, `getLspProjectMap` (Phase 10-1)
+- lspReferences.ts (~170줄) — LSP ReferenceProvider + CallHierarchyProvider, `findReferences`, `getCallHierarchy`, `findReferencesByName`, 마크다운 포맷터 (Phase 10-2)
 - rulesLoader.ts (~60줄) — .codebreeze-rules.md 로드, 캐시, 포맷 (Phase 8-2)
 
 ## monitor/ — 이벤트 감시
@@ -45,8 +47,8 @@
 - markdown.ts (~35줄) — 마크다운 코드 블록 포맷 헬퍼
 - clipboardCompat.ts (~170줄) — VS Code clipboard API + 파일 기반 폴백 + 2초 타임아웃, `showManualPastePanel` WebView (I-001)
 
-## mcp/ — MCP 서버 (Phase 3)
-- mcpServer.ts (~220줄) — `@modelcontextprotocol/sdk` 기반 HTTP MCP 서버, 포트 3700, 9개 도구
+## mcp/ — MCP 서버 (Phase 3 + 10)
+- mcpServer.ts (~280줄) — `@modelcontextprotocol/sdk` 기반 HTTP MCP 서버, 포트 3700, 12개 도구 (`search_symbols`, `find_references`, `get_lsp_project_map` 추가 — Phase 10-3)
 
 ## bridge/ — WebSocket 브릿지 (Phase 4 + 7-9)
 - wsBridgeServer.ts (~240줄) — WebSocket 서버, ACK 프로토콜, 재전송 큐, OutputChannel 로그, 연결 상태 모니터링 (Phase 7-3)
@@ -89,6 +91,9 @@
 - agentLoop.test.ts — 에이전트 루프 기본 테스트
 - promptBuilder.test.ts — 프롬프트 빌더 테스트 (Phase 9-1)
 - rulesLoader.test.ts — 프로젝트 규칙 로더 테스트 (Phase 8-2)
+- lspIndexer.test.ts — LSP 심볼 인덱서 테스트 (Phase 10-1)
+- lspReferences.test.ts — LSP 참조/콜 계층 테스트 (Phase 10-2)
+- mcpServerPhase10.test.ts — MCP 서버 Phase 10 도구 테스트 (Phase 10-3)
 
 ## 규칙
 - 1파일 300줄 이하 목표, 초과 시 분할 검토

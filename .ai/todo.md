@@ -65,8 +65,30 @@
 - [ ] Windows 10 VS Code 환경 테스트 (경로 호환 확인)
 - [ ] Termux 태블릿 code-server 테스트
 
-## 미구현 (중기 로드맵, Phase 10+)
-- [ ] LSP 기반 코드베이스 인덱싱 (Phase 10)
+## 완료 — Phase 10: LSP 기반 코드베이스 인덱싱
+- [x] Task 10-1: LSP 심볼 인덱서
+  - lspIndexer.ts 신규 (~200줄): DocumentSymbolProvider 기반 심볼 추출
+  - 증분 업데이트: onDidSaveTextDocument 감지
+  - 워크스페이스 전체 인덱싱 (300파일, 60초 캐시)
+  - searchSymbols(), getLspProjectMap(), getAllSymbolsFlat()
+- [x] Task 10-2: 참조 추적 + 콜 계층
+  - lspReferences.ts 신규 (~170줄): ReferenceProvider + CallHierarchyProvider
+  - findReferences(), getCallHierarchy(), findReferencesByName()
+  - 마크다운 포맷터: formatReferencesMarkdown(), formatCallHierarchyMarkdown()
+- [x] Task 10-3: MCP 도구 확장
+  - search_symbols, find_references, get_lsp_project_map 도구 추가
+  - MCP 도구 수 9 → 12개
+- [x] Task 10-4: Smart Context 자동 선택 모드
+  - smartContextMode 설정: 'manual' (기본) / 'auto'
+  - auto 모드: LSP 맵 + 에러 심볼 참조 자동 수집
+  - buildContextPayload에 'lspProjectMap' 타입 추가
+
+## 신규 테스트 (Phase 10)
+- [x] lspIndexer.test.ts — 8개 (SymbolEntry, FileIndex, search, flatten)
+- [x] lspReferences.test.ts — 7개 (ReferenceResult, CallHierarchy, format, limits)
+- [x] mcpServerPhase10.test.ts — 7개 (search_symbols, find_references, get_lsp_project_map, health)
+
+## 미구현 (중기 로드맵, Phase 11+)
 - [ ] 백그라운드 Agent + 인라인 코드 완성 (Phase 11)
 - [ ] CLI + CI/CD + MCP 도구 확장 (Phase 12)
 - [ ] 플러그인/커넥터 아키텍처 (Phase 13)

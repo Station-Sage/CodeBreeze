@@ -90,3 +90,10 @@ WebView 인라인은 가볍지만 기능 제한. 사용자가 선택.
 - `auto`: 즉시 적용 (가장 빠르지만 위험)
 - `safe`: 적용 후 빌드+테스트 → 실패 시 자동 undo (실용적 기본값 후보)
 기본값은 `preview` — 사용자가 신뢰를 쌓은 후 `safe`로 전환.
+
+## D19: LSP 폴백 전략 (Phase 10)
+LSP DocumentSymbolProvider가 없는 파일(언어 서버 미설치)은 기존 정규식 기반 `projectMapCollector.ts`로 폴백.
+`getLspProjectMap()`이 빈 결과 시 `getProjectMap()`을 자동 사용.
+MCP에서는 `get_lsp_project_map`(정확) / `get_project_map`(범용) 둘 다 노출.
+Smart Context `auto` 모드에서는 LSP 우선, 실패 시 정규식 폴백.
+`smartContextMode: 'manual'` (기본) — 기존 동작 유지, LSP 자동 수집 비활성.
