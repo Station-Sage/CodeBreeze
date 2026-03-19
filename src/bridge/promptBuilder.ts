@@ -33,14 +33,16 @@ export function buildErrorFixPrompt(
   if (rules) parts.push(rules);
 
   // 2. Instructions
-  parts.push([
-    `The build/test failed with ${errorCount} error(s). Please fix the following issues.`,
-    '',
-    'Requirements:',
-    '- Return the corrected code as complete file(s) in markdown code blocks with file paths',
-    '- Only modify files that need changes',
-    '- Preserve existing code style and conventions',
-  ].join('\n'));
+  parts.push(
+    [
+      `The build/test failed with ${errorCount} error(s). Please fix the following issues.`,
+      '',
+      'Requirements:',
+      '- Return the corrected code as complete file(s) in markdown code blocks with file paths',
+      '- Only modify files that need changes',
+      '- Preserve existing code style and conventions',
+    ].join('\n')
+  );
 
   // 3. Error context
   if (contextPayload) parts.push(contextPayload);
@@ -68,26 +70,30 @@ export function buildIterationPrompt(
   if (rules) parts.push(rules);
 
   // 2. Instructions with history awareness
-  parts.push([
-    `The build/test still fails with ${errorCount} error(s) after ${history.length} attempt(s).`,
-    '',
-    'IMPORTANT: Review the previous attempts below and avoid repeating the same fixes.',
-    'Try a different approach if the previous fix did not resolve the issue.',
-    '',
-    'Requirements:',
-    '- Return the corrected code as complete file(s) in markdown code blocks with file paths',
-    '- Only modify files that need changes',
-    '- Consider whether the error root cause is in a different file than reported',
-  ].join('\n'));
+  parts.push(
+    [
+      `The build/test still fails with ${errorCount} error(s) after ${history.length} attempt(s).`,
+      '',
+      'IMPORTANT: Review the previous attempts below and avoid repeating the same fixes.',
+      'Try a different approach if the previous fix did not resolve the issue.',
+      '',
+      'Requirements:',
+      '- Return the corrected code as complete file(s) in markdown code blocks with file paths',
+      '- Only modify files that need changes',
+      '- Consider whether the error root cause is in a different file than reported',
+    ].join('\n')
+  );
 
   // 3. Previous iteration history
   if (history.length > 0) {
-    const historyParts = history.map((h) => [
-      `### Attempt ${h.iteration}`,
-      `- Errors: ${h.errorCount} (exit code: ${h.buildExitCode})`,
-      `- Modified files: ${h.appliedFiles.join(', ') || 'none'}`,
-      `- Error summary: ${h.errorSummary}`,
-    ].join('\n'));
+    const historyParts = history.map((h) =>
+      [
+        `### Attempt ${h.iteration}`,
+        `- Errors: ${h.errorCount} (exit code: ${h.buildExitCode})`,
+        `- Modified files: ${h.appliedFiles.join(', ') || 'none'}`,
+        `- Error summary: ${h.errorSummary}`,
+      ].join('\n')
+    );
 
     parts.push('## Previous Attempts\n\n' + historyParts.join('\n\n'));
   }
@@ -108,7 +114,11 @@ export function buildErrorChainMarkdown(
   errorFiles: string[],
   workspaceRoot: string,
   depth: number,
-  getErrorChainFilesFn: (files: string[], root: string, d: number) => Array<{ chainFiles: string[] }>
+  getErrorChainFilesFn: (
+    files: string[],
+    root: string,
+    d: number
+  ) => Array<{ chainFiles: string[] }>
 ): string {
   if (errorFiles.length === 0 || depth === 0) return '';
 
@@ -139,6 +149,8 @@ export function buildErrorChainMarkdown(
 export function summarizeErrors(diagnosticItems: Array<{ file: string; message: string }>): string {
   if (diagnosticItems.length === 0) return 'no errors';
   const first3 = diagnosticItems.slice(0, 3);
-  const summary = first3.map((d) => `${path.basename(d.file)}: ${d.message.slice(0, 60)}`).join('; ');
+  const summary = first3
+    .map((d) => `${path.basename(d.file)}: ${d.message.slice(0, 60)}`)
+    .join('; ');
   return diagnosticItems.length > 3 ? `${summary} (+${diagnosticItems.length - 3} more)` : summary;
 }

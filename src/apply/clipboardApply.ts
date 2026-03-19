@@ -16,7 +16,11 @@ export async function applyCodeBlocksHeadless(blocks: CodeBlock[]): Promise<Appl
   for (const block of blocks) {
     const uri = block.filePath ? await resolveOrCreateFile(block.filePath) : null;
     if (!uri) {
-      results.push({ filePath: block.filePath || 'unknown', status: 'skipped', error: 'No file path or resolution failed' });
+      results.push({
+        filePath: block.filePath || 'unknown',
+        status: 'skipped',
+        error: 'No file path or resolution failed',
+      });
       continue;
     }
     try {
@@ -25,7 +29,10 @@ export async function applyCodeBlocksHeadless(blocks: CodeBlock[]): Promise<Appl
         results.push({ filePath: block.filePath || 'unknown', status: ok ? 'applied' : 'failed' });
       } else {
         const doc = await vscode.workspace.openTextDocument(uri);
-        const fullRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(doc.lineCount, 0));
+        const fullRange = new vscode.Range(
+          new vscode.Position(0, 0),
+          new vscode.Position(doc.lineCount, 0)
+        );
         const edit = new vscode.WorkspaceEdit();
         edit.replace(uri, fullRange, block.content);
         await vscode.workspace.applyEdit(edit);
@@ -55,9 +62,12 @@ export async function applyFromClipboard(): Promise<void> {
     }
 
     if (contentType === 'mixed') {
-      const choice = await vscode.window.showQuickPick(['Apply as diff patch', 'Apply code blocks'], {
-        placeHolder: 'Clipboard contains both diff and code blocks - how to apply?',
-      });
+      const choice = await vscode.window.showQuickPick(
+        ['Apply as diff patch', 'Apply code blocks'],
+        {
+          placeHolder: 'Clipboard contains both diff and code blocks - how to apply?',
+        }
+      );
       if (!choice) return;
       if (choice === 'Apply as diff patch') {
         await applyPatch(text);

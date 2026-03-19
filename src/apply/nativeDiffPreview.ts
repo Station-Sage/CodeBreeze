@@ -42,9 +42,7 @@ export async function showNativeDiff(block: CodeBlock): Promise<boolean> {
   pendingFiles.set(pendingPath, actualOriginalUri);
 
   const relPath = path.relative(wsRoot, actualOriginalUri.fsPath);
-  const title = isNewFile
-    ? `${relPath} (New File)`
-    : `${relPath}: Current ↔ Proposed`;
+  const title = isNewFile ? `${relPath} (New File)` : `${relPath}: Current ↔ Proposed`;
 
   // If new file, create empty temp original
   let leftUri = actualOriginalUri;
@@ -67,7 +65,11 @@ export async function showNativeDiff(block: CodeBlock): Promise<boolean> {
   // Clean up temp files
   cleanupPendingFile(pendingPath);
   if (isNewFile) {
-    try { fs.unlinkSync(leftUri.fsPath); } catch { /* ignore */ }
+    try {
+      fs.unlinkSync(leftUri.fsPath);
+    } catch {
+      /* ignore */
+    }
   }
 
   if (choice === 'Accept') {
@@ -136,7 +138,11 @@ export async function applyWithNativeDiff(block: CodeBlock): Promise<boolean> {
 }
 
 function cleanupPendingFile(pendingPath: string): void {
-  try { fs.unlinkSync(pendingPath); } catch { /* ignore */ }
+  try {
+    fs.unlinkSync(pendingPath);
+  } catch {
+    /* ignore */
+  }
   pendingFiles.delete(pendingPath);
 }
 

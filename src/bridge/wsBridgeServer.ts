@@ -188,7 +188,10 @@ export function stopWsBridge(): void {
 }
 
 /** Broadcast a message to all connected browser extensions, with optional ACK tracking */
-export function broadcastToBrowser(data: Record<string, unknown>, expectAck = false): string | undefined {
+export function broadcastToBrowser(
+  data: Record<string, unknown>,
+  expectAck = false
+): string | undefined {
   let msgId: string | undefined;
   if (expectAck) {
     msgId = generateMsgId();
@@ -259,9 +262,8 @@ function updateBridgeStatusBar(): void {
   if (!statusBarItem) return;
   const count = connections.length;
   const port = getWsBridgePort();
-  statusBarItem.text = count > 0
-    ? `$(radio-tower) Bridge :${port} (${count})`
-    : `$(radio-tower) Bridge :${port}`;
+  statusBarItem.text =
+    count > 0 ? `$(radio-tower) Bridge :${port} (${count})` : `$(radio-tower) Bridge :${port}`;
 }
 
 // ── Message handler ───────────────────────────────────────────────────────
@@ -291,7 +293,8 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
         ws.send(JSON.stringify({ type: 'ack', msgId: msg.msgId }));
       }
 
-      const blocks = (msg.blocks as { language?: string; filePath?: string; content: string }[]) || [];
+      const blocks =
+        (msg.blocks as { language?: string; filePath?: string; content: string }[]) || [];
       const source = String(msg.source || 'browser');
       if (blocks.length === 0) return;
 
@@ -306,7 +309,9 @@ async function handleWsMessage(ws: WebSocket, raw: string): Promise<void> {
           isDiff: false,
         }));
         const results = await applyCodeBlocksHeadless(cbBlocks);
-        const applied = results.filter((r) => r.status === 'applied' || r.status === 'created').length;
+        const applied = results.filter(
+          (r) => r.status === 'applied' || r.status === 'created'
+        ).length;
         ws.send(JSON.stringify({ type: 'applyResult', applied, results }));
         log(`Auto-applied ${applied}/${blocks.length} block(s)`);
         vscode.window.showInformationMessage(

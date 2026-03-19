@@ -65,9 +65,12 @@ function buildErrorFixPrompt(): string {
           const relPath = path.relative(workspaceRoot, chainFile);
           const ext = path.extname(chainFile).slice(1);
           const lines = content.split('\n');
-          const truncated = lines.length > 50 ? lines.slice(0, 50).join('\n') + '\n// ...' : content;
+          const truncated =
+            lines.length > 50 ? lines.slice(0, 50).join('\n') + '\n// ...' : content;
           chainParts.push(formatCodeBlock(truncated, ext, relPath));
-        } catch { /* skip */ }
+        } catch {
+          /* skip */
+        }
       }
     }
     if (chainParts.length > 0) {
@@ -108,15 +111,17 @@ export async function fixErrorWithAI(): Promise<void> {
     } else {
       // No bridge: copy to clipboard
       await writeClipboard(prompt);
-      vscode.window.showInformationMessage(
-        'CodeBreeze: Error context copied to clipboard. Paste into AI chat, then use Ctrl+Shift+A to apply the fix.',
-        'Open AI Chat'
-      ).then((choice) => {
-        if (choice === 'Open AI Chat') {
-          const config = getConfig();
-          vscode.env.openExternal(vscode.Uri.parse(config.chatUrl));
-        }
-      });
+      vscode.window
+        .showInformationMessage(
+          'CodeBreeze: Error context copied to clipboard. Paste into AI chat, then use Ctrl+Shift+A to apply the fix.',
+          'Open AI Chat'
+        )
+        .then((choice) => {
+          if (choice === 'Open AI Chat') {
+            const config = getConfig();
+            vscode.env.openExternal(vscode.Uri.parse(config.chatUrl));
+          }
+        });
     }
   } catch {
     // Bridge module not available — clipboard fallback

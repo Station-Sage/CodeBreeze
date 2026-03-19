@@ -42,7 +42,9 @@ function computeInlineDiff(original: string, proposed: string): DiffLine[] {
 
 function collapseContext(lines: DiffLine[], ctx: number): DiffLine[] {
   const changed = new Set<number>();
-  lines.forEach((l, i) => { if (l.type !== 'context') changed.add(i); });
+  lines.forEach((l, i) => {
+    if (l.type !== 'context') changed.add(i);
+  });
   if (changed.size === 0) return [];
 
   const keep = new Set<number>();

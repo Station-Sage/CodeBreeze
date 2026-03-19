@@ -1,9 +1,9 @@
-name: CI - Fix Branches (Lightweight)
+name: CI - Feature Branches (Lightweight)
 
 on:
   push:
     branches:
-      - 'fix/**'
+      - 'feat/**'
 
 jobs:
   quick-check:
@@ -26,11 +26,19 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+      - name: Format check (Prettier)
+        run: npx prettier --check "src/**/*.ts" "browser-extension/**/*.js"
+        continue-on-error: true
+
       - name: Basic lint
         run: npm run lint
         continue-on-error: true
 
+      - name: Dependency vulnerability scan
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
       - name: Check status
         run: |
-          echo "✅ Fix branch quick check passed!"
+          echo "✅ Feature branch quick check passed!"
           echo "📝 Full CI will run when PR is created to dev"

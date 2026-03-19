@@ -26,7 +26,12 @@ export function registerGitEventMonitor(context: vscode.ExtensionContext): void 
     const git = gitExt.exports?.getAPI?.(1);
     if (!git) return;
 
-    const setupRepo = (repo: { state: { onDidChange: (cb: () => void) => vscode.Disposable; HEAD?: { name?: string; commit?: string } }}) => {
+    const setupRepo = (repo: {
+      state: {
+        onDidChange: (cb: () => void) => vscode.Disposable;
+        HEAD?: { name?: string; commit?: string };
+      };
+    }) => {
       let prevBranch = repo.state.HEAD?.name;
       let prevCommit = repo.state.HEAD?.commit || '';
 

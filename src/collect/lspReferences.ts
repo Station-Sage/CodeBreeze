@@ -49,7 +49,9 @@ export async function findReferences(
     // B-023: use allSettled so one failed doc open doesn't lose all results
     const settled = await Promise.allSettled(
       locations
-        .filter((loc) => includeDeclaration || !loc.range.isEqual(new vscode.Range(position, position)))
+        .filter(
+          (loc) => includeDeclaration || !loc.range.isEqual(new vscode.Range(position, position))
+        )
         .slice(0, 50) // limit results
         .map(async (loc) => {
           const refDoc = await vscode.workspace.openTextDocument(loc.uri);
@@ -160,11 +162,7 @@ export async function findReferencesByName(
     if (match) target = match;
   }
 
-  return findReferences(
-    target.location.uri,
-    target.location.range.start,
-    true
-  );
+  return findReferences(target.location.uri, target.location.range.start, true);
 }
 
 /**

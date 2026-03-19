@@ -9,7 +9,10 @@ import { getConfig, getWorkspaceRoot } from '../config';
 import { buildCompletionContext } from './completionContextBuilder';
 
 let pendingRequest: AbortController | null = null;
-let completionCache = new Map<string, { items: vscode.InlineCompletionItem[]; timestamp: number }>();
+let completionCache = new Map<
+  string,
+  { items: vscode.InlineCompletionItem[]; timestamp: number }
+>();
 const CACHE_TTL_MS = 30_000;
 
 export class CodeBreezeInlineCompletionProvider implements vscode.InlineCompletionItemProvider {
@@ -93,11 +96,14 @@ async function requestViaBridge(
     if (!isWsBridgeRunning()) return null;
 
     // Send completion request to browser
-    broadcastToBrowser({
-      type: 'send_to_ai',
-      payload: contextPayload,
-      autoSend: true,
-    }, true);
+    broadcastToBrowser(
+      {
+        type: 'send_to_ai',
+        payload: contextPayload,
+        autoSend: true,
+      },
+      true
+    );
 
     // Wait for AI response via bridge (B-014 fix: actually await response)
     return new Promise<string | null>((resolve) => {
@@ -181,11 +187,14 @@ export async function triggerInlineCompletion(): Promise<void> {
         vscode.window.showWarningMessage('CodeBreeze: Bridge not running. Start it first.');
         return;
       }
-      broadcastToBrowser({
-        type: 'send_to_ai',
-        payload: contextPayload,
-        autoSend: true,
-      }, true);
+      broadcastToBrowser(
+        {
+          type: 'send_to_ai',
+          payload: contextPayload,
+          autoSend: true,
+        },
+        true
+      );
       vscode.window.showInformationMessage('CodeBreeze: Completion request sent to AI');
     } catch {
       vscode.window.showErrorMessage('CodeBreeze: Failed to send completion request');

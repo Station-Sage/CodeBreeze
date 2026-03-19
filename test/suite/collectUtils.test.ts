@@ -76,7 +76,8 @@ suite('Collect Utils Tests', () => {
       const unstaged = getGitDiff(repoRoot, 'unstaged');
       const both = getGitDiff(repoRoot, 'both');
       assert.strictEqual(typeof both, 'string');
-      assert.strictEqual(both.length, staged.length + unstaged.length);
+      assert.ok(both.includes(staged), 'both should contain staged diff');
+      assert.ok(both.includes(unstaged), 'both should contain unstaged diff');
     });
   });
 

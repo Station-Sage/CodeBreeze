@@ -50,7 +50,11 @@ export async function buildSmartContext(): Promise<string> {
 
   // 3. Last build log (if recent, within 5 minutes)
   const buildResult = getLastBuildResult();
-  if (buildResult && Date.now() - buildResult.timestamp < 5 * 60 * 1000 && buildResult.exitCode !== 0) {
+  if (
+    buildResult &&
+    Date.now() - buildResult.timestamp < 5 * 60 * 1000 &&
+    buildResult.exitCode !== 0
+  ) {
     parts.push(`## Recent Build Failure (${buildResult.command})`);
     parts.push('```');
     parts.push((buildResult.stdout + buildResult.stderr).split('\n').slice(-30).join('\n'));

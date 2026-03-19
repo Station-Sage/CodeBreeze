@@ -83,9 +83,10 @@ async function callTool(name: string, params: Record<string, unknown>): Promise<
     case 'get_git_diff': {
       if (!root) throw new Error('No workspace open');
       const rawMode = (params.mode as string) || 'unstaged';
-      const mode = (['staged', 'unstaged', 'both'].includes(rawMode)
-        ? rawMode
-        : 'unstaged') as 'staged' | 'unstaged' | 'both';
+      const mode = (['staged', 'unstaged', 'both'].includes(rawMode) ? rawMode : 'unstaged') as
+        | 'staged'
+        | 'unstaged'
+        | 'both';
       const diff = getGitDiff(root, mode);
       const branch = getCurrentBranch(root);
       return { branch, mode, diff: diff || '(no changes)' };
@@ -268,54 +269,94 @@ export async function startMcpServer(context: vscode.ExtensionContext): Promise<
   // ── Register tools ──
   const mcpServer = new McpServer({ name: 'codebreeze', version: '1.0.0' });
 
-  mcpServer.tool('read_file', 'Read a file from the VS Code workspace', { path: z.string() },
-    async ({ path: p }) => toContent(await callTool('read_file', { path: p })));
+  mcpServer.tool(
+    'read_file',
+    'Read a file from the VS Code workspace',
+    { path: z.string() },
+    async ({ path: p }) => toContent(await callTool('read_file', { path: p }))
+  );
 
-  mcpServer.tool('write_file', 'Write content to a workspace file (creates if not exists)',
+  mcpServer.tool(
+    'write_file',
+    'Write content to a workspace file (creates if not exists)',
     { path: z.string(), content: z.string() },
-    async ({ path: p, content: c }) => toContent(await callTool('write_file', { path: p, content: c })));
+    async ({ path: p, content: c }) =>
+      toContent(await callTool('write_file', { path: p, content: c }))
+  );
 
-  mcpServer.tool('get_errors', 'Get current compilation/lint errors from VS Code diagnostics', {},
-    async () => toContent(await callTool('get_errors', {})));
+  mcpServer.tool(
+    'get_errors',
+    'Get current compilation/lint errors from VS Code diagnostics',
+    {},
+    async () => toContent(await callTool('get_errors', {}))
+  );
 
-  mcpServer.tool('get_git_diff', 'Get git diff for the current workspace',
+  mcpServer.tool(
+    'get_git_diff',
+    'Get git diff for the current workspace',
     { mode: z.enum(['staged', 'unstaged', 'both']).optional() },
-    async ({ mode }) => toContent(await callTool('get_git_diff', { mode })));
+    async ({ mode }) => toContent(await callTool('get_git_diff', { mode }))
+  );
 
-  mcpServer.tool('get_git_log', 'Get recent git commit log',
+  mcpServer.tool(
+    'get_git_log',
+    'Get recent git commit log',
     { count: z.number().optional() },
-    async ({ count }) => toContent(await callTool('get_git_log', { count })));
+    async ({ count }) => toContent(await callTool('get_git_log', { count }))
+  );
 
-  mcpServer.tool('run_build', 'Retrieve the last build result', {},
-    async () => toContent(await callTool('run_build', {})));
+  mcpServer.tool('run_build', 'Retrieve the last build result', {}, async () =>
+    toContent(await callTool('run_build', {}))
+  );
 
-  mcpServer.tool('get_project_map', 'Get a map of project files with their exported symbols', {},
-    async () => toContent(await callTool('get_project_map', {})));
+  mcpServer.tool(
+    'get_project_map',
+    'Get a map of project files with their exported symbols',
+    {},
+    async () => toContent(await callTool('get_project_map', {}))
+  );
 
-  mcpServer.tool('apply_code',
+  mcpServer.tool(
+    'apply_code',
     'Apply markdown code blocks to workspace files (same as Ctrl+Shift+A)',
     { markdown: z.string() },
-    async ({ markdown }) => toContent(await callTool('apply_code', { markdown })));
+    async ({ markdown }) => toContent(await callTool('apply_code', { markdown }))
+  );
 
-  mcpServer.tool('list_files', 'List files in a workspace directory',
+  mcpServer.tool(
+    'list_files',
+    'List files in a workspace directory',
     { dir: z.string().optional(), recursive: z.boolean().optional() },
-    async ({ dir, recursive }) => toContent(await callTool('list_files', { dir, recursive })));
+    async ({ dir, recursive }) => toContent(await callTool('list_files', { dir, recursive }))
+  );
 
-  mcpServer.tool('search_symbols', 'Search for symbols (functions, classes, etc.) across the workspace using LSP',
+  mcpServer.tool(
+    'search_symbols',
+    'Search for symbols (functions, classes, etc.) across the workspace using LSP',
     { query: z.string() },
-    async ({ query }) => toContent(await callTool('search_symbols', { query })));
+    async ({ query }) => toContent(await callTool('search_symbols', { query }))
+  );
 
-  mcpServer.tool('find_references', 'Find all references to a symbol by name',
+  mcpServer.tool(
+    'find_references',
+    'Find all references to a symbol by name',
     { symbol: z.string(), file: z.string().optional() },
-    async ({ symbol, file }) => toContent(await callTool('find_references', { symbol, file })));
+    async ({ symbol, file }) => toContent(await callTool('find_references', { symbol, file }))
+  );
 
-  mcpServer.tool('get_lsp_project_map', 'Get LSP-enhanced project map with accurate symbol information',
+  mcpServer.tool(
+    'get_lsp_project_map',
+    'Get LSP-enhanced project map with accurate symbol information',
     {},
-    async () => toContent(await callTool('get_lsp_project_map', {})));
+    async () => toContent(await callTool('get_lsp_project_map', {}))
+  );
 
-  mcpServer.tool('get_pending_completion', 'Get pending inline completion request context (if any)',
+  mcpServer.tool(
+    'get_pending_completion',
+    'Get pending inline completion request context (if any)',
     {},
-    async () => toContent(await callTool('get_pending_completion', {})));
+    async () => toContent(await callTool('get_pending_completion', {}))
+  );
 
   // ── HTTP server with StreamableHTTP transport ──
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
