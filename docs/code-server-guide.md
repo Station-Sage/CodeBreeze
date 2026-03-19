@@ -180,9 +180,14 @@ code-server --bind-addr 0.0.0.0:8080 --auth password &
 git clone https://github.com/Station-Sage/CodeBreeze ~/project
 cd ~/project
 
-# VSIX 다운로드 (GitHub Releases 또는 Actions Artifacts)
-# (Actions Artifacts: dev 브랜치 빌드 → codebreeze-*.vsix)
-wget https://github.com/Station-Sage/CodeBreeze/releases/latest/download/codebreeze.vsix
+```bash
+# 최신 dev 빌드 다운로드
+wget -O codebreeze-latest.vsix https://github.com/Station-Sage/CodeBreeze/releases/download/dev-latest/codebreeze-latest.vsix
+code-server --install-extension codebreeze-latest.vsix --force
+
+# 브라우저 확장 (Lemur: ZIP / PC Chrome·Edge: CRX)
+wget -O ~/codebreeze-bridge.zip https://github.com/Station-Sage/CodeBreeze/releases/download/dev-latest/codebreeze-bridge.zip
+wget -O ~/codebreeze-bridge.crx https://github.com/Station-Sage/CodeBreeze/releases/download/dev-latest/codebreeze-bridge.crx
 
 # 설치
 code-server --install-extension codebreeze.vsix
@@ -218,6 +223,10 @@ tmux new-session -d -s codeserver 'code-server --bind-addr 127.0.0.1:8080 --auth
 tmux attach -t codeserver
 ```
 
+### 4-8. `README.md` — 태블릿 가이드 링크 (선택)
+
+```markdown
+> 📱 Android tablet (Termux + code-server): [Setup Guide](docs/code-server-guide.md#4-termux--code-server-android-태블릿폰)
 ---
 
 ## 5. 클립보드 동작 방식

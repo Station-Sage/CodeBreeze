@@ -61,6 +61,9 @@ jobs:
       - name: Package VSIX
         run: npx vsce package
 
+      - name: Rename VSIX for stable URL
+        run: cp codebreeze-*.vsix codebreeze-latest.vsix
+
       - name: Check VSIX size
         run: |
           SIZE=$(stat -c%s codebreeze-*.vsix)
@@ -145,3 +148,28 @@ jobs:
               repo: context.repo.repo,
               body: '✅ CI passed! VSIX and browser extension artifacts are available in the Actions tab.'
             })
+
+      - name: Delete existing dev-latest release
+        if: github.event_name == 'push'
+        run: gh release delete dev-latest --yes --cleanup-tag || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete existing dev-latest release
+        if: github.event_name == 'push'
+        run: gh release delete dev-latest --yes --cleanup-tag || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create dev-latest pre-release
+        if: github.event_name == 'push'
+        run: |
+          gh release create dev-latest \
+            --title "CodeBreeze dev-latest ($(date -u +%Y-%m-%d))" \
+            --notes "Auto-built from dev branch. Commit: ${{ github.sha }}" \
+            --prerelease \
+            codebreeze-latest.vsix \
+            dist/codebreeze-bridge.zip \
+            dist/codebreeze-bridge.crx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

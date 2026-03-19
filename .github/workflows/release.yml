@@ -43,6 +43,9 @@ jobs:
       - name: Package VSIX
         run: npx vsce package
 
+      - name: Rename VSIX for stable URL
+        run: cp codebreeze-*.vsix codebreeze-latest.vsix
+
       - name: Build browser extension (CRX + ZIP)
         run: npm run build:browser-ext
 
@@ -62,6 +65,7 @@ jobs:
           name: CodeBreeze ${{ steps.version.outputs.version }}
           files: |
             *.vsix
+            codebreeze-latest.vsix
             dist/codebreeze-bridge.zip
             dist/codebreeze-bridge.crx
           draft: false
