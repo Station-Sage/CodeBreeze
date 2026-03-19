@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
 
     steps:
@@ -148,12 +148,6 @@ jobs:
               repo: context.repo.repo,
               body: '✅ CI passed! VSIX and browser extension artifacts are available in the Actions tab.'
             })
-
-      - name: Delete existing dev-latest release
-        if: github.event_name == 'push'
-        run: gh release delete dev-latest --yes --cleanup-tag || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete existing dev-latest release
         if: github.event_name == 'push'
