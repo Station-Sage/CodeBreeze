@@ -39,7 +39,16 @@ export interface ParsedError {
 }
 
 export interface ContextPayload {
-  type: 'file' | 'selection' | 'errors' | 'gitDiff' | 'gitLog' | 'buildLog' | 'smartContext' | 'projectMap' | 'lspProjectMap';
+  type:
+    | 'file'
+    | 'selection'
+    | 'errors'
+    | 'gitDiff'
+    | 'gitLog'
+    | 'buildLog'
+    | 'smartContext'
+    | 'projectMap'
+    | 'lspProjectMap';
   content: string;
   label: string;
 }

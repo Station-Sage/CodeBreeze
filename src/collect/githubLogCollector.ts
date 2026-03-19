@@ -54,13 +54,16 @@ export async function copyBuildLogFromGitHub(): Promise<void> {
 
 async function fetchFailedJobLog(token: string, repo: string): Promise<string | null> {
   const runsData = await githubGet(`/repos/${repo}/actions/runs?status=failure&per_page=5`, token);
-  const runs = (runsData as { workflow_runs?: Array<{ id: number; name: string; head_branch: string }> }).workflow_runs;
+  const runs = (
+    runsData as { workflow_runs?: Array<{ id: number; name: string; head_branch: string }> }
+  ).workflow_runs;
 
   if (!runs || runs.length === 0) return null;
 
   const run = runs[0];
   const jobsData = await githubGet(`/repos/${repo}/actions/runs/${run.id}/jobs`, token);
-  const jobs = (jobsData as { jobs?: Array<{ id: number; name: string; conclusion: string }> }).jobs;
+  const jobs = (jobsData as { jobs?: Array<{ id: number; name: string; conclusion: string }> })
+    .jobs;
   const failedJob = jobs?.find((j) => j.conclusion === 'failure');
 
   if (!failedJob) return null;
@@ -82,9 +85,7 @@ async function fetchFailedJobLog(token: string, repo: string): Promise<string | 
   // Extract error lines only
   const errorLines = logText
     .split('\n')
-    .filter((line) =>
-      /error|FAILED|Error:|failed/i.test(line) && !line.includes('##[group]')
-    )
+    .filter((line) => /error|FAILED|Error:|failed/i.test(line) && !line.includes('##[group]'))
     .slice(0, 50)
     .join('\n');
 
@@ -119,17 +120,19 @@ function githubGet(path: string, token: string): Promise<unknown> {
       headers: buildHeaders(token),
     };
 
-    https.get(options, (res) => {
-      let data = '';
-      res.on('data', (chunk: string) => (data += chunk));
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch {
-          reject(new Error(`Failed to parse GitHub API response`));
-        }
-      });
-    }).on('error', reject);
+    https
+      .get(options, (res) => {
+        let data = '';
+        res.on('data', (chunk: string) => (data += chunk));
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch {
+            reject(new Error(`Failed to parse GitHub API response`));
+          }
+        });
+      })
+      .on('error', reject);
   });
 }
 
@@ -141,19 +144,23 @@ function githubGetBuffer(path: string, token: string): Promise<Buffer> {
       headers: buildHeaders(token),
     };
 
-    https.get(options, (res) => {
-      // Handle redirect
-      if (res.statusCode === 302 && res.headers.location) {
-        https.get(res.headers.location, (res2) => {
-          const chunks: Buffer[] = [];
-          res2.on('data', (chunk: Buffer) => chunks.push(chunk));
-          res2.on('end', () => resolve(Buffer.concat(chunks)));
-        }).on('error', reject);
-        return;
-      }
-      const chunks: Buffer[] = [];
-      res.on('data', (chunk: Buffer) => chunks.push(chunk));
-      res.on('end', () => resolve(Buffer.concat(chunks)));
-    }).on('error', reject);
+    https
+      .get(options, (res) => {
+        // Handle redirect
+        if (res.statusCode === 302 && res.headers.location) {
+          https
+            .get(res.headers.location, (res2) => {
+              const chunks: Buffer[] = [];
+              res2.on('data', (chunk: Buffer) => chunks.push(chunk));
+              res2.on('end', () => resolve(Buffer.concat(chunks)));
+            })
+            .on('error', reject);
+          return;
+        }
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+      })
+      .on('error', reject);
   });
 }

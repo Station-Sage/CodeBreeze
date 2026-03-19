@@ -25,7 +25,7 @@ export function computeDiffRanges(original: string, proposed: string): DiffRange
     const change = changes[i];
 
     if (!change.added && !change.removed) {
-      lineNo += (change.count ?? 0);
+      lineNo += change.count ?? 0;
       i++;
       continue;
     }
@@ -37,8 +37,8 @@ export function computeDiffRanges(original: string, proposed: string): DiffRange
     while (i < changes.length && (changes[i].added || changes[i].removed)) {
       const c = changes[i];
       if (c.removed) {
-        removeCount += (c.count ?? 0);
-        lineNo += (c.count ?? 0);
+        removeCount += c.count ?? 0;
+        lineNo += c.count ?? 0;
       }
       if (c.added) {
         const lines = c.value.split('\n');

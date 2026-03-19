@@ -39,26 +39,54 @@ export class CodeBreezeSidebarProvider implements vscode.TreeDataProvider<TreeIt
     );
 
     return [
-      makeItem('💬 Open AI Chat', vscode.TreeItemCollapsibleState.None, {
-        command: 'codebreeze.openChatPanel',
-        title: 'Open AI Chat',
-      }, undefined, new vscode.MarkdownString(
-        '**AI Chat 열기**\n\n설정된 AI Chat URL을 Simple Browser로 엽니다.\n\n`Ctrl+Shift+H`'
-      )),
-      makeItem('🖥️ Control Panel', vscode.TreeItemCollapsibleState.None, {
-        command: 'codebreeze.openControlPanel',
-        title: 'Open Control Panel',
-      }, 'panel', new vscode.MarkdownString(
-        '**Control Panel 열기**\n\nSend / Receive / History 패널을 오른쪽 사이드바에 표시합니다.\n\n`Ctrl+Shift+I`'
-      )),
-      makeItem(watchLabel, vscode.TreeItemCollapsibleState.None, {
-        command: 'codebreeze.toggleAutoWatch',
-        title: 'Toggle Auto-watch',
-      }, 'autowatch', watchTooltip),
-      makeItem('📊 Monitor', vscode.TreeItemCollapsibleState.Collapsed, undefined, 'monitor',
-        new vscode.MarkdownString('**에러/경고 모니터**\n\n현재 워크스페이스의 컴파일 에러와 경고 수를 표시합니다.')
+      makeItem(
+        '💬 Open AI Chat',
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: 'codebreeze.openChatPanel',
+          title: 'Open AI Chat',
+        },
+        undefined,
+        new vscode.MarkdownString(
+          '**AI Chat 열기**\n\n설정된 AI Chat URL을 Simple Browser로 엽니다.\n\n`Ctrl+Shift+H`'
+        )
       ),
-      makeItem('📋 History', vscode.TreeItemCollapsibleState.Collapsed, undefined, 'history',
+      makeItem(
+        '🖥️ Control Panel',
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: 'codebreeze.openControlPanel',
+          title: 'Open Control Panel',
+        },
+        'panel',
+        new vscode.MarkdownString(
+          '**Control Panel 열기**\n\nSend / Receive / History 패널을 오른쪽 사이드바에 표시합니다.\n\n`Ctrl+Shift+I`'
+        )
+      ),
+      makeItem(
+        watchLabel,
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: 'codebreeze.toggleAutoWatch',
+          title: 'Toggle Auto-watch',
+        },
+        'autowatch',
+        watchTooltip
+      ),
+      makeItem(
+        '📊 Monitor',
+        vscode.TreeItemCollapsibleState.Collapsed,
+        undefined,
+        'monitor',
+        new vscode.MarkdownString(
+          '**에러/경고 모니터**\n\n현재 워크스페이스의 컴파일 에러와 경고 수를 표시합니다.'
+        )
+      ),
+      makeItem(
+        '📋 History',
+        vscode.TreeItemCollapsibleState.Collapsed,
+        undefined,
+        'history',
         new vscode.MarkdownString('**적용 기록**\n\n최근 코드 적용 기록을 표시합니다. (최대 10개)')
       ),
     ];
@@ -67,12 +95,18 @@ export class CodeBreezeSidebarProvider implements vscode.TreeDataProvider<TreeIt
   private getMonitorItems(): TreeItem[] {
     const { errors, warnings } = countDiagnostics();
     return [
-      makeItem(`Errors: ${errors}  Warnings: ${warnings}`, vscode.TreeItemCollapsibleState.None, {
-        command: 'codebreeze.copyErrorsForAI',
-        title: 'Copy Errors',
-      }, undefined, new vscode.MarkdownString(
-        `**현재 진단 현황**\n\n- 에러: ${errors}개\n- 경고: ${warnings}개\n\n클릭하면 에러 컨텍스트를 클립보드에 복사합니다.`
-      )),
+      makeItem(
+        `Errors: ${errors}  Warnings: ${warnings}`,
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: 'codebreeze.copyErrorsForAI',
+          title: 'Copy Errors',
+        },
+        undefined,
+        new vscode.MarkdownString(
+          `**현재 진단 현황**\n\n- 에러: ${errors}개\n- 경고: ${warnings}개\n\n클릭하면 에러 컨텍스트를 클립보드에 복사합니다.`
+        )
+      ),
     ];
   }
 
@@ -87,8 +121,14 @@ export class CodeBreezeSidebarProvider implements vscode.TreeDataProvider<TreeIt
       const applied = entry.results.filter((r) => r.status === 'applied').length;
       const label = `${date} — ${applied} file(s) applied`;
       const undoHint = entry.undoAvailable ? '\n\n`Ctrl+Shift+U` 로 되돌리기 가능' : '';
-      return makeItem(label, vscode.TreeItemCollapsibleState.None, undefined, 'historyEntry',
-        new vscode.MarkdownString(`**적용 기록**\n\n- 시각: ${date}\n- 적용된 파일: ${applied}개${undoHint}`)
+      return makeItem(
+        label,
+        vscode.TreeItemCollapsibleState.None,
+        undefined,
+        'historyEntry',
+        new vscode.MarkdownString(
+          `**적용 기록**\n\n- 시각: ${date}\n- 적용된 파일: ${applied}개${undoHint}`
+        )
       );
     });
   }

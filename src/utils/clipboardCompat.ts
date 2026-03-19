@@ -38,10 +38,7 @@ function isCodeServer(): boolean {
   if (scheme === 'http' || scheme === 'https') return true;
 
   // Fallback: check known env vars
-  return !!(
-    process.env.VSCODE_AGENT_FOLDER ||
-    process.env.CS_DISABLE_FILE_DOWNLOADS
-  );
+  return !!(process.env.VSCODE_AGENT_FOLDER || process.env.CS_DISABLE_FILE_DOWNLOADS);
 }
 
 /**
@@ -71,18 +68,21 @@ export async function writeClipboard(text: string): Promise<boolean> {
       fs.writeFileSync(fbPath, text, 'utf8');
       // Auto-open Manual Paste panel in code-server environments
       if (isCodeServer()) {
-        vscode.window.showInformationMessage(
-          `CodeBreeze: Clipboard unavailable — saved to ${FALLBACK_FILENAME}.`,
-          'Open Manual Paste', 'Open File'
-        ).then((choice) => {
-          if (choice === 'Open Manual Paste') {
-            vscode.commands.executeCommand('codebreeze.manualPaste');
-          } else if (choice === 'Open File') {
-            vscode.workspace.openTextDocument(fbPath!).then((doc) =>
-              vscode.window.showTextDocument(doc)
-            );
-          }
-        });
+        vscode.window
+          .showInformationMessage(
+            `CodeBreeze: Clipboard unavailable — saved to ${FALLBACK_FILENAME}.`,
+            'Open Manual Paste',
+            'Open File'
+          )
+          .then((choice) => {
+            if (choice === 'Open Manual Paste') {
+              vscode.commands.executeCommand('codebreeze.manualPaste');
+            } else if (choice === 'Open File') {
+              vscode.workspace
+                .openTextDocument(fbPath!)
+                .then((doc) => vscode.window.showTextDocument(doc));
+            }
+          });
       }
       return false;
     } catch {
@@ -174,7 +174,9 @@ export function showManualPastePanel(context: vscode.ExtensionContext): void {
           return;
         }
         const results = await applyCodeBlocksHeadless(blocks);
-        const applied = results.filter((r) => r.status === 'applied' || r.status === 'created').length;
+        const applied = results.filter(
+          (r) => r.status === 'applied' || r.status === 'created'
+        ).length;
         vscode.window.showInformationMessage(`CodeBreeze: ${applied} block(s) applied`);
         panel.dispose();
       }

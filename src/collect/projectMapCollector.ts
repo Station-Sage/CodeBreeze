@@ -24,36 +24,33 @@ function extractSymbols(content: string, ext: string): string[] {
       /^(?:export\s+)?(?:abstract\s+)?class\s+(\w+)/,
       /^(?:export\s+)?interface\s+(\w+)/,
       /^(?:export\s+)?type\s+(\w+)\s*=/,
-      /^(?:export\s+)?(?:const|let|var)\s+(\w+)\s*(?::\s*[\w<>[\]|&]+)?\s*=\s*(?:async\s+)?\(/,
+      /^(?:export\s+)?(?:const|let|var)\s+(\w+)\s*(?::\s*[\w<>[\]|&]+)?\s*=\s*(?:async\s+)?\(/
     );
   } else if (ext === '.py') {
-    patterns.push(
-      /^(?:    )?def\s+(\w+)\s*\(/,
-      /^class\s+(\w+)/,
-    );
+    patterns.push(/^(?:    )?def\s+(\w+)\s*\(/, /^class\s+(\w+)/);
   } else if (ext === '.kt') {
     patterns.push(
       /^(?:    )?(?:suspend\s+)?fun\s+(\w+)\s*[(<]/,
       /^(?:data\s+|sealed\s+|abstract\s+)?class\s+(\w+)/,
-      /^interface\s+(\w+)/,
+      /^interface\s+(\w+)/
     );
   } else if (ext === '.java') {
     patterns.push(
       /^\s*(?:public|private|protected)?\s*(?:static\s+)?(?:\w+\s+)+(\w+)\s*\(/,
       /^\s*(?:public|private|protected)?\s*(?:abstract\s+)?class\s+(\w+)/,
-      /^\s*(?:public\s+)?interface\s+(\w+)/,
+      /^\s*(?:public\s+)?interface\s+(\w+)/
     );
   } else if (ext === '.go') {
     patterns.push(
       /^func\s+(?:\(\w+\s+\*?\w+\)\s+)?(\w+)\s*\(/,
       /^type\s+(\w+)\s+struct/,
-      /^type\s+(\w+)\s+interface/,
+      /^type\s+(\w+)\s+interface/
     );
   } else if (ext === '.rs') {
     patterns.push(
       /^(?:pub\s+)?(?:async\s+)?fn\s+(\w+)/,
       /^(?:pub\s+)?struct\s+(\w+)/,
-      /^(?:pub\s+)?trait\s+(\w+)/,
+      /^(?:pub\s+)?trait\s+(\w+)/
     );
   }
 

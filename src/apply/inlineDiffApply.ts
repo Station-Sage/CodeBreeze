@@ -75,7 +75,11 @@ export async function applyInlineDiffHeadless(blocks: CodeBlock[]): Promise<Appl
   for (const block of blocks) {
     if (block.isDiff) {
       // Diff patches should go through patchApplier
-      results.push({ filePath: block.filePath || 'unknown', status: 'skipped', error: 'Use patchApplier for diff format' });
+      results.push({
+        filePath: block.filePath || 'unknown',
+        status: 'skipped',
+        error: 'Use patchApplier for diff format',
+      });
       continue;
     }
     const result = await applyInlineDiff(block);

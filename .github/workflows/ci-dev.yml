@@ -94,7 +94,8 @@ jobs:
         with:
           script: |
             const { execSync } = require('child_process');
-            const changed = execSync('git diff --name-only origin/dev...HEAD').toString().trim();
+            execSync('git fetch origin dev || true');
+            const changed = execSync('git diff --name-only origin/dev...HEAD || git diff --name-only HEAD~1...HEAD').toString().trim();
             const modules = {
               'src/apply/':          '📥 Apply 흐름',
               'src/collect/':        '📤 Collect 흐름',

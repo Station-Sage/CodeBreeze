@@ -16,11 +16,7 @@ export async function findWorkspaceFile(partialPath: string): Promise<vscode.Uri
 
   // Try with source root prefix
   if (files.length === 0 && config.sourceRoot) {
-    files = await vscode.workspace.findFiles(
-      `${config.sourceRoot}/${partialPath}`,
-      EXCLUDE,
-      5
-    );
+    files = await vscode.workspace.findFiles(`${config.sourceRoot}/${partialPath}`, EXCLUDE, 5);
   }
 
   // Try basename glob fallback

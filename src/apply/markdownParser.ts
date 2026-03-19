@@ -147,7 +147,9 @@ function parseChunked(text: string): CodeBlock[] {
     for (const block of parsed) {
       if (!block.filePath) {
         block.filePath = extractFilePathFromPrecedingLines(
-          text, start, text.substring(0, start).split('\n')
+          text,
+          start,
+          text.substring(0, start).split('\n')
         );
       }
       blocks.push(block);

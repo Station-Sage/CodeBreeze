@@ -21,7 +21,9 @@ export function buildErrorsMarkdown(): string | null {
 
   for (const [uri, diagnostics] of allDiagnostics) {
     const relevant = diagnostics.filter(
-      (d) => d.severity === vscode.DiagnosticSeverity.Error || d.severity === vscode.DiagnosticSeverity.Warning
+      (d) =>
+        d.severity === vscode.DiagnosticSeverity.Error ||
+        d.severity === vscode.DiagnosticSeverity.Warning
     );
     if (relevant.length === 0) continue;
 
@@ -36,7 +38,13 @@ export function buildErrorsMarkdown(): string | null {
       // Attach code context
       const context = getCodeContext(uri.fsPath, line, config.contextLines);
       if (context) {
-        errors.push(formatCodeBlock(context, getLanguage(uri.fsPath), `${relPath}:${Math.max(1, line - config.contextLines)}-${line + config.contextLines}`));
+        errors.push(
+          formatCodeBlock(
+            context,
+            getLanguage(uri.fsPath),
+            `${relPath}:${Math.max(1, line - config.contextLines)}-${line + config.contextLines}`
+          )
+        );
       }
       errors.push('');
     }
@@ -64,9 +72,19 @@ function getCodeContext(filePath: string, centerLine: number, contextLines: numb
 function getLanguage(filePath: string): string {
   const ext = filePath.split('.').pop() || '';
   const map: Record<string, string> = {
-    ts: 'typescript', js: 'javascript', py: 'python', go: 'go',
-    rs: 'rust', java: 'java', cs: 'csharp', cpp: 'cpp', c: 'c',
-    rb: 'ruby', php: 'php', swift: 'swift', kt: 'kotlin',
+    ts: 'typescript',
+    js: 'javascript',
+    py: 'python',
+    go: 'go',
+    rs: 'rust',
+    java: 'java',
+    cs: 'csharp',
+    cpp: 'cpp',
+    c: 'c',
+    rb: 'ruby',
+    php: 'php',
+    swift: 'swift',
+    kt: 'kotlin',
   };
   return map[ext] || ext;
 }

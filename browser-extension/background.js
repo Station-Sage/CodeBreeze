@@ -29,7 +29,11 @@ function connect(port) {
 
   ws.onmessage = (event) => {
     let msg;
-    try { msg = JSON.parse(event.data); } catch { return; }
+    try {
+      msg = JSON.parse(event.data);
+    } catch {
+      return;
+    }
 
     switch (msg.type) {
       case 'send_to_ai':

@@ -25,8 +25,29 @@ export interface FileIndex {
 /** Workspace-level symbol index, cached in memory */
 const indexCache = new Map<string, FileIndex>();
 
-const INCLUDE_EXTS = ['.ts', '.tsx', '.js', '.jsx', '.py', '.kt', '.java', '.go', '.rs', '.c', '.cpp', '.h'];
-const EXCLUDE_PATTERNS = ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/out/**', '**/build/**', '**/__pycache__/**', '**/.next/**'];
+const INCLUDE_EXTS = [
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.py',
+  '.kt',
+  '.java',
+  '.go',
+  '.rs',
+  '.c',
+  '.cpp',
+  '.h',
+];
+const EXCLUDE_PATTERNS = [
+  '**/node_modules/**',
+  '**/.git/**',
+  '**/dist/**',
+  '**/out/**',
+  '**/build/**',
+  '**/__pycache__/**',
+  '**/.next/**',
+];
 const MAX_FILES = 300;
 
 let fileWatcher: vscode.FileSystemWatcher | undefined;
@@ -104,7 +125,10 @@ export async function indexWorkspace(force = false): Promise<Map<string, FileInd
 /**
  * Search symbols by name pattern across the indexed workspace.
  */
-export function searchSymbols(query: string, kindFilter?: vscode.SymbolKind): (SymbolEntry & { file: string })[] {
+export function searchSymbols(
+  query: string,
+  kindFilter?: vscode.SymbolKind
+): (SymbolEntry & { file: string })[] {
   const results: (SymbolEntry & { file: string })[] = [];
   const lowerQuery = query.toLowerCase();
 
@@ -144,9 +168,7 @@ export async function getLspProjectMap(): Promise<string> {
 
   const lines: string[] = ['## Project Map (LSP)'];
   for (const [, fileIndex] of indexCache) {
-    const topSymbols = fileIndex.symbols
-      .map((s) => symbolKindLabel(s.kind) + s.name)
-      .slice(0, 15);
+    const topSymbols = fileIndex.symbols.map((s) => symbolKindLabel(s.kind) + s.name).slice(0, 15);
     if (topSymbols.length > 0) {
       lines.push(`- **${fileIndex.relativePath}**: ${topSymbols.join(', ')}`);
     }
@@ -179,8 +201,20 @@ function symbolKindLabel(kind: vscode.SymbolKind): string {
 /**
  * Flatten all symbols from the index into a simple list for MCP/external use.
  */
-export function getAllSymbolsFlat(): { file: string; name: string; kind: string; startLine: number; endLine: number }[] {
-  const results: { file: string; name: string; kind: string; startLine: number; endLine: number }[] = [];
+export function getAllSymbolsFlat(): {
+  file: string;
+  name: string;
+  kind: string;
+  startLine: number;
+  endLine: number;
+}[] {
+  const results: {
+    file: string;
+    name: string;
+    kind: string;
+    startLine: number;
+    endLine: number;
+  }[] = [];
   for (const [, fileIndex] of indexCache) {
     flattenSymbols(fileIndex.symbols, fileIndex.relativePath, results);
   }

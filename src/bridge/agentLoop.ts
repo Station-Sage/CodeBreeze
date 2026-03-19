@@ -156,7 +156,8 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
   state.history = [];
 
   const vsCfg = vscode.workspace.getConfiguration('codebreeze');
-  const maxIterations = vsCfg.get<number>('agentLoopMaxIterations') ?? DEFAULT_AGENT_LOOP_MAX_ITERATIONS;
+  const maxIterations =
+    vsCfg.get<number>('agentLoopMaxIterations') ?? DEFAULT_AGENT_LOOP_MAX_ITERATIONS;
   const timeoutSec = vsCfg.get<number>('agentLoopTimeout') ?? 300;
   const applyMode = vsCfg.get<string>('applyMode') ?? 'inline';
   const errorChainDepth = vsCfg.get<number>('errorChainDepth') ?? 2;
@@ -165,7 +166,9 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
   const autoApplyMode = config.agentLoopAutoApply;
 
   state.maxIterations = maxIterations;
-  notify(`Agent loop started (max ${maxIterations} iterations, timeout ${timeoutSec}s, apply: ${autoApplyMode})`);
+  notify(
+    `Agent loop started (max ${maxIterations} iterations, timeout ${timeoutSec}s, apply: ${autoApplyMode})`
+  );
 
   let lastFingerprint = '';
   let repeatedCount = 0;
@@ -231,7 +234,10 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
       const contextPayload = await buildContextPayload(['errors', 'file', 'buildLog']);
       const errorFiles = getErrorFilePaths();
       const chainContext = buildErrorChainMarkdown(
-        errorFiles, workspaceRoot, errorChainDepth, getErrorChainFiles
+        errorFiles,
+        workspaceRoot,
+        errorChainDepth,
+        getErrorChainFiles
       );
 
       let prompt: string;
@@ -262,7 +268,9 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
 
       // ── Phase 4: Apply ──
       setPhase('apply');
-      notify(`Received ${responseBlocks.length} code block(s). Applying (mode: ${autoApplyMode})...`);
+      notify(
+        `Received ${responseBlocks.length} code block(s). Applying (mode: ${autoApplyMode})...`
+      );
 
       let results;
       if (autoApplyMode === 'preview') {
@@ -277,17 +285,21 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
             accepted.push(block);
           }
         }
-        results = applyMode === 'inline'
-          ? await applyInlineDiffHeadless(accepted)
-          : await applyCodeBlocksHeadless(accepted);
+        results =
+          applyMode === 'inline'
+            ? await applyInlineDiffHeadless(accepted)
+            : await applyCodeBlocksHeadless(accepted);
       } else {
         // auto or safe: apply directly
-        results = applyMode === 'inline'
-          ? await applyInlineDiffHeadless(responseBlocks)
-          : await applyCodeBlocksHeadless(responseBlocks);
+        results =
+          applyMode === 'inline'
+            ? await applyInlineDiffHeadless(responseBlocks)
+            : await applyCodeBlocksHeadless(responseBlocks);
       }
 
-      const applied = results.filter((r) => r.status === 'applied' || r.status === 'created').length;
+      const applied = results.filter(
+        (r) => r.status === 'applied' || r.status === 'created'
+      ).length;
       const appliedFiles = results
         .filter((r) => r.status === 'applied' || r.status === 'created')
         .map((r) => r.filePath);
@@ -315,7 +327,10 @@ export async function startAgentLoop(webview: vscode.Webview): Promise<void> {
         const verifyResult = await runCommandAndCopy(buildCmd);
         const { errors: verifyErrors } = countDiagnostics();
 
-        if (verifyErrors > errors || (verifyResult && verifyResult.exitCode !== 0 && !buildFailed)) {
+        if (
+          verifyErrors > errors ||
+          (verifyResult && verifyResult.exitCode !== 0 && !buildFailed)
+        ) {
           notify('Safe mode: Changes made things worse. Undoing...');
           try {
             const { undoLastApply } = await import('../apply/safetyGuard');

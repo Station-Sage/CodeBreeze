@@ -5,10 +5,7 @@ import * as vscode from 'vscode';
 import { getControlPanelStyles } from './chatPanelStyles';
 import { getControlPanelScript } from './chatPanelScript';
 
-export function generateControlPanelHtml(
-  _webview: vscode.Webview,
-  nonce: string
-): string {
+export function generateControlPanelHtml(_webview: vscode.Webview, nonce: string): string {
   const styles = getControlPanelStyles();
   const script = getControlPanelScript();
 

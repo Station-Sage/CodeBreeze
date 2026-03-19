@@ -83,7 +83,9 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
               await applySingleBlock(blocks[msg.index]);
             }
           } catch (err) {
-            vscode.window.showErrorMessage(`CodeBreeze: Apply failed — ${err instanceof Error ? err.message : String(err)}`);
+            vscode.window.showErrorMessage(
+              `CodeBreeze: Apply failed — ${err instanceof Error ? err.message : String(err)}`
+            );
           }
           break;
         }
@@ -97,10 +99,14 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
             const payload = await buildContextPayload(msg.types || []);
             if (payload) {
               await writeClipboard(payload);
-              vscode.window.showInformationMessage('CodeBreeze: Context copied — paste into AI chat');
+              vscode.window.showInformationMessage(
+                'CodeBreeze: Context copied — paste into AI chat'
+              );
             }
           } catch (err) {
-            vscode.window.showErrorMessage(`CodeBreeze: Context copy failed — ${err instanceof Error ? err.message : String(err)}`);
+            vscode.window.showErrorMessage(
+              `CodeBreeze: Context copy failed — ${err instanceof Error ? err.message : String(err)}`
+            );
           }
           break;
         }
@@ -169,7 +175,8 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
           break;
 
         case 'bridgeSendToAI': {
-          const { broadcastToBrowser, isWsBridgeRunning } = await import('../bridge/wsBridgeServer');
+          const { broadcastToBrowser, isWsBridgeRunning } =
+            await import('../bridge/wsBridgeServer');
           if (!isWsBridgeRunning()) {
             vscode.window.showWarningMessage('CodeBreeze: Bridge not running. Start it first.');
             break;
@@ -181,7 +188,8 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
         case 'bridgeSendContext': {
           const contextPayload = await buildContextPayload(['file', 'errors', 'gitDiff']);
           if (contextPayload) {
-            const { broadcastToBrowser, isWsBridgeRunning } = await import('../bridge/wsBridgeServer');
+            const { broadcastToBrowser, isWsBridgeRunning } =
+              await import('../bridge/wsBridgeServer');
             if (isWsBridgeRunning()) {
               broadcastToBrowser({ type: 'send_to_ai', payload: contextPayload, autoSend: true });
               webview.postMessage({ command: 'bridgeUserSent', text: '[Smart Context sent]' });
@@ -218,7 +226,8 @@ function setupMessageHandler(webview: vscode.Webview, context: vscode.ExtensionC
 
 async function sendBridgeStatus(webview: vscode.Webview): Promise<void> {
   try {
-    const { isWsBridgeRunning, getWsBridgePort, getConnectionCount } = await import('../bridge/wsBridgeServer');
+    const { isWsBridgeRunning, getWsBridgePort, getConnectionCount } =
+      await import('../bridge/wsBridgeServer');
     webview.postMessage({
       command: 'bridgeStatus',
       running: isWsBridgeRunning(),
@@ -244,7 +253,6 @@ export async function openControlPanel(_context: vscode.ExtensionContext): Promi
     );
   }
 }
-
 
 async function refreshClipboardBlocks(): Promise<void> {
   if (!panelWebview) return;
@@ -328,7 +336,10 @@ async function applySingleBlock(block: CodeBlock): Promise<void> {
 
   const doc = await vscode.workspace.openTextDocument(uri);
   const editor = await vscode.window.showTextDocument(doc);
-  const fullRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(doc.lineCount, 0));
+  const fullRange = new vscode.Range(
+    new vscode.Position(0, 0),
+    new vscode.Position(doc.lineCount, 0)
+  );
 
   await editor.edit((e) => e.replace(fullRange, block.content));
   await doc.save();
