@@ -12,12 +12,7 @@
         '[class*="message"][class*="bot"], [class*="message"][class*="assistant"]',
         '[class*="response"], [class*="reply"]',
       ],
-      codeBlockSelector: [
-        'pre code',
-        'pre',
-        '[class*="code-block"] code',
-        '[class*="code"] pre',
-      ],
+      codeBlockSelector: ['pre code', 'pre', '[class*="code-block"] code', '[class*="code"] pre'],
       inputSelector: [
         'textarea',
         '[contenteditable="true"]',
@@ -39,10 +34,7 @@
       ],
       codeBlockSelector: ['pre code', 'pre'],
       inputSelector: ['#prompt-textarea', 'textarea'],
-      sendButtonSelector: [
-        '[data-testid="send-button"]',
-        'button[aria-label*="Send" i]',
-      ],
+      sendButtonSelector: ['[data-testid="send-button"]', 'button[aria-label*="Send" i]'],
     },
     'chatgpt.com': {
       version: '2026-03-18',
@@ -52,10 +44,7 @@
       ],
       codeBlockSelector: ['pre code', 'pre'],
       inputSelector: ['#prompt-textarea', 'textarea'],
-      sendButtonSelector: [
-        '[data-testid="send-button"]',
-        'button[aria-label*="Send" i]',
-      ],
+      sendButtonSelector: ['[data-testid="send-button"]', 'button[aria-label*="Send" i]'],
     },
     'claude.ai': {
       version: '2026-03-18',
@@ -64,15 +53,8 @@
         '[data-role="assistant"]',
       ],
       codeBlockSelector: ['pre code', 'pre'],
-      inputSelector: [
-        '[contenteditable="true"]',
-        'textarea',
-        '[class*="input"][contenteditable]',
-      ],
-      sendButtonSelector: [
-        'button[aria-label="Send"]',
-        'button[class*="send"]',
-      ],
+      inputSelector: ['[contenteditable="true"]', 'textarea', '[class*="input"][contenteditable]'],
+      sendButtonSelector: ['button[aria-label="Send"]', 'button[class*="send"]'],
     },
     'gemini.google.com': {
       version: '2026-03-18',
@@ -82,10 +64,7 @@
       ],
       codeBlockSelector: ['pre code', 'pre'],
       inputSelector: ['.ql-editor', 'textarea', '[contenteditable="true"]'],
-      sendButtonSelector: [
-        'button[aria-label="Send message"]',
-        'button[class*="send"]',
-      ],
+      sendButtonSelector: ['button[aria-label="Send message"]', 'button[class*="send"]'],
     },
   };
 
@@ -103,7 +82,9 @@
       try {
         const result = root.querySelectorAll(sel);
         if (result.length > 0) return result;
-      } catch { /* invalid selector, try next */ }
+      } catch {
+        /* invalid selector, try next */
+      }
     }
     return root.querySelectorAll('__never_match__');
   }
@@ -114,7 +95,9 @@
       try {
         const el = root.querySelector(sel);
         if (el) return el;
-      } catch { /* invalid selector, try next */ }
+      } catch {
+        /* invalid selector, try next */
+      }
     }
     return null;
   }
@@ -134,12 +117,16 @@
           codeElements = Array.from(found);
           break;
         }
-      } catch { /* try next */ }
+      } catch {
+        /* try next */
+      }
     }
 
     // Final fallback: generic code selectors
     if (codeElements.length === 0) {
-      const fallback = container.querySelectorAll('pre > code, [class*="code-block"], [class*="codeBlock"]');
+      const fallback = container.querySelectorAll(
+        'pre > code, [class*="code-block"], [class*="codeBlock"]'
+      );
       if (fallback.length > 0) codeElements = Array.from(fallback);
     }
 
@@ -231,7 +218,8 @@
 
       if (input.tagName === 'TEXTAREA') {
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLTextAreaElement.prototype, 'value'
+          window.HTMLTextAreaElement.prototype,
+          'value'
         ).set;
         nativeInputValueSetter.call(input, msg.payload);
         input.dispatchEvent(new Event('input', { bubbles: true }));

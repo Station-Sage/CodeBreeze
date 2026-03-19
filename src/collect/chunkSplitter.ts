@@ -29,15 +29,8 @@ const BOUNDARY_PATTERNS: Record<string, RegExp[]> = {
     /^(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\(/,
     /^(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)|[^=])\s*=>/,
   ],
-  python: [
-    /^(?:async\s+)?def\s+(\w+)/,
-    /^class\s+(\w+)/,
-  ],
-  go: [
-    /^func\s+(?:\([^)]+\)\s+)?(\w+)/,
-    /^type\s+(\w+)\s+struct/,
-    /^type\s+(\w+)\s+interface/,
-  ],
+  python: [/^(?:async\s+)?def\s+(\w+)/, /^class\s+(\w+)/],
+  go: [/^func\s+(?:\([^)]+\)\s+)?(\w+)/, /^type\s+(\w+)\s+struct/, /^type\s+(\w+)\s+interface/],
   rust: [
     /^(?:pub\s+)?(?:async\s+)?fn\s+(\w+)/,
     /^(?:pub\s+)?struct\s+(\w+)/,
@@ -59,8 +52,12 @@ const BOUNDARY_PATTERNS: Record<string, RegExp[]> = {
 
 // Alias common language IDs
 const LANG_ALIASES: Record<string, string> = {
-  ts: 'typescript', tsx: 'typescript', typescriptreact: 'typescript',
-  js: 'javascript', jsx: 'javascript', javascriptreact: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  typescriptreact: 'typescript',
+  js: 'javascript',
+  jsx: 'javascript',
+  javascriptreact: 'javascript',
   py: 'python',
   rs: 'rust',
   kt: 'kotlin',
@@ -75,7 +72,11 @@ function getPatterns(language: string): RegExp[] {
  * Split file content into chunks by function/class boundaries.
  * Falls back to fixed-size line splitting if no boundaries are detected.
  */
-export function splitByBoundary(content: string, language: string, fallbackMaxLines: number = 200): Chunk[] {
+export function splitByBoundary(
+  content: string,
+  language: string,
+  fallbackMaxLines: number = 200
+): Chunk[] {
   const lines = content.split('\n');
   const patterns = getPatterns(language);
 
@@ -90,8 +91,11 @@ export function splitByBoundary(content: string, language: string, fallbackMaxLi
     for (const pattern of patterns) {
       const match = trimmed.match(pattern);
       if (match) {
-        const kind: Chunk['kind'] = /class|struct|interface|trait|enum|type|impl|object/.test(trimmed)
-          ? 'class' : 'function';
+        const kind: Chunk['kind'] = /class|struct|interface|trait|enum|type|impl|object/.test(
+          trimmed
+        )
+          ? 'class'
+          : 'function';
         boundaries.push({ line: i, name: match[1], kind });
         break;
       }

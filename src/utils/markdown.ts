@@ -13,7 +13,11 @@ export function truncateLines(text: string, maxLines: number): string {
     return text;
   }
   const half = Math.floor(maxLines / 2);
-  const kept = [...lines.slice(0, half), `... (${lines.length - maxLines} lines omitted) ...`, ...lines.slice(lines.length - half)];
+  const kept = [
+    ...lines.slice(0, half),
+    `... (${lines.length - maxLines} lines omitted) ...`,
+    ...lines.slice(lines.length - half),
+  ];
   return kept.join('\n');
 }
 

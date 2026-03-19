@@ -41,7 +41,12 @@ export async function buildCompletionContext(
     new vscode.Range(beforeStart, 0, position.line, position.character)
   );
   const afterText = document.getText(
-    new vscode.Range(position.line, position.character, afterEnd, document.lineAt(afterEnd).text.length)
+    new vscode.Range(
+      position.line,
+      position.character,
+      afterEnd,
+      document.lineAt(afterEnd).text.length
+    )
   );
 
   const currentLine = document.lineAt(position.line).text;
@@ -54,7 +59,9 @@ export async function buildCompletionContext(
   parts.push('```');
 
   // 3. Import context (first 20 lines usually contain imports)
-  const importLines = document.getText(new vscode.Range(0, 0, Math.min(20, document.lineCount - 1), 0));
+  const importLines = document.getText(
+    new vscode.Range(0, 0, Math.min(20, document.lineCount - 1), 0)
+  );
   if (beforeStart > 20) {
     parts.push('## Imports');
     parts.push('```' + document.languageId);
@@ -71,7 +78,9 @@ export async function buildCompletionContext(
     if (symbols && symbols.length > 0) {
       const currentSymbol = findContainingSymbol(symbols, position);
       if (currentSymbol) {
-        parts.push(`## Current scope: ${currentSymbol.name} (${vscode.SymbolKind[currentSymbol.kind]})`);
+        parts.push(
+          `## Current scope: ${currentSymbol.name} (${vscode.SymbolKind[currentSymbol.kind]})`
+        );
       }
 
       const symbolList = symbols
@@ -86,9 +95,7 @@ export async function buildCompletionContext(
 
   // 5. Diagnostics at cursor location
   const diagnostics = vscode.languages.getDiagnostics(document.uri);
-  const nearbyDiags = diagnostics.filter(
-    (d) => Math.abs(d.range.start.line - position.line) <= 3
-  );
+  const nearbyDiags = diagnostics.filter((d) => Math.abs(d.range.start.line - position.line) <= 3);
   if (nearbyDiags.length > 0) {
     parts.push('## Nearby diagnostics');
     for (const d of nearbyDiags.slice(0, 5)) {
@@ -99,7 +106,9 @@ export async function buildCompletionContext(
 
   // 6. Completion instruction
   parts.push('');
-  parts.push('Complete the code at the <<CURSOR>> position. Provide ONLY the code to insert, no explanation.');
+  parts.push(
+    'Complete the code at the <<CURSOR>> position. Provide ONLY the code to insert, no explanation.'
+  );
 
   // Trim to token budget
   let result = parts.join('\n');
@@ -133,9 +142,7 @@ function findContainingSymbol(
 /**
  * Get related files for the current document (based on imports).
  */
-export async function getRelatedFileSymbols(
-  document: vscode.TextDocument
-): Promise<string> {
+export async function getRelatedFileSymbols(document: vscode.TextDocument): Promise<string> {
   const root = getWorkspaceRoot();
   if (!root) return '';
 

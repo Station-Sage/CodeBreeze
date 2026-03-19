@@ -79,7 +79,12 @@ export async function copySelectionForAI(): Promise<void> {
   );
 }
 
-export function buildFileMarkdown(filePath: string, lang: string, content: string, relPath: string): string {
+export function buildFileMarkdown(
+  filePath: string,
+  lang: string,
+  content: string,
+  relPath: string
+): string {
   return formatCodeBlock(content, lang, relPath);
 }
 
@@ -87,7 +92,12 @@ export function buildFileMarkdown(filePath: string, lang: string, content: strin
  * Split a large file by function/class boundaries and format each chunk.
  * Returns array of markdown code blocks, one per chunk.
  */
-export function buildChunkedFileMarkdown(lang: string, content: string, relPath: string, maxLines: number): string[] {
+export function buildChunkedFileMarkdown(
+  lang: string,
+  content: string,
+  relPath: string,
+  maxLines: number
+): string[] {
   const chunks = splitByBoundary(content, lang, maxLines);
   return chunks.map((chunk) => {
     const label = `${relPath}:${chunk.startLine}-${chunk.endLine} (${chunk.name})`;

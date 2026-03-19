@@ -18,7 +18,13 @@ import { showManualPastePanel } from './utils/clipboardCompat';
 import { CodeBreezeSidebarProvider } from './ui/sidebarProvider';
 import { initHistoryStore } from './ui/historyStore';
 import { initStatusBar, flashStatusBar } from './ui/statusBarItem';
-import { openChatPanel, openControlPanel, CodebreezeWebviewViewProvider, isAutoWatchEnabled, setAutoWatch } from './ui/chatPanel';
+import {
+  openChatPanel,
+  openControlPanel,
+  CodebreezeWebviewViewProvider,
+  isAutoWatchEnabled,
+  setAutoWatch,
+} from './ui/chatPanel';
 
 // Monitor
 import { registerTaskMonitor } from './monitor/taskMonitor';
@@ -54,33 +60,53 @@ export function activate(context: vscode.ExtensionContext): void {
   registerGitEventMonitor(context);
 
   // Start LSP incremental indexer (Phase 10)
-  import('./collect/lspIndexer').then(({ startIncrementalWatcher }) => {
-    context.subscriptions.push(startIncrementalWatcher());
-  }).catch(() => { /* LSP indexer optional */ });
+  import('./collect/lspIndexer')
+    .then(({ startIncrementalWatcher }) => {
+      context.subscriptions.push(startIncrementalWatcher());
+    })
+    .catch(() => {
+      /* LSP indexer optional */
+    });
 
   // Register inline completion provider (Phase 11)
-  import('./providers/inlineCompletionProvider').then(({ CodeBreezeInlineCompletionProvider }) => {
-    const provider = new CodeBreezeInlineCompletionProvider();
-    context.subscriptions.push(
-      vscode.languages.registerInlineCompletionItemProvider({ pattern: '**' }, provider)
-    );
-  }).catch(() => { /* Inline completion optional */ });
+  import('./providers/inlineCompletionProvider')
+    .then(({ CodeBreezeInlineCompletionProvider }) => {
+      const provider = new CodeBreezeInlineCompletionProvider();
+      context.subscriptions.push(
+        vscode.languages.registerInlineCompletionItemProvider({ pattern: '**' }, provider)
+      );
+    })
+    .catch(() => {
+      /* Inline completion optional */
+    });
 
   // Auto-start Browser Bridge if configured (B-012)
-  const autoStartBridge = vscode.workspace.getConfiguration('codebreeze').get<boolean>('autoStartBridge');
+  const autoStartBridge = vscode.workspace
+    .getConfiguration('codebreeze')
+    .get<boolean>('autoStartBridge');
   if (autoStartBridge) {
-    import('./bridge/wsBridgeServer').then(({ startWsBridge }) => {
-      startWsBridge(context);
-    }).catch(() => { /* Bridge auto-start optional */ });
+    import('./bridge/wsBridgeServer')
+      .then(({ startWsBridge }) => {
+        startWsBridge(context);
+      })
+      .catch(() => {
+        /* Bridge auto-start optional */
+      });
   }
 
   // Auto-start background agent if configured (Phase 11)
-  import('./bridge/backgroundAgent').then(({ startBackgroundAgent }) => {
-    const bgMode = vscode.workspace.getConfiguration('codebreeze').get<string>('backgroundAgentMode');
-    if (bgMode && bgMode !== 'off') {
-      startBackgroundAgent(context);
-    }
-  }).catch(() => { /* Background agent optional */ });
+  import('./bridge/backgroundAgent')
+    .then(({ startBackgroundAgent }) => {
+      const bgMode = vscode.workspace
+        .getConfiguration('codebreeze')
+        .get<string>('backgroundAgentMode');
+      if (bgMode && bgMode !== 'off') {
+        startBackgroundAgent(context);
+      }
+    })
+    .catch(() => {
+      /* Background agent optional */
+    });
 
   // Update status bar on diagnostics change
   onDiagnosticsChanged((errors, _warnings) => {
@@ -92,22 +118,34 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // Register all commands
   const commands: [string, (...args: unknown[]) => unknown][] = [
-    ['codebreeze.startMcpServer', async () => {
-      const { startMcpServer } = await import('./mcp/mcpServer');
-      return startMcpServer(context);
-    }],
-    ['codebreeze.stopMcpServer', async () => {
-      const { stopMcpServer } = await import('./mcp/mcpServer');
-      return stopMcpServer();
-    }],
-    ['codebreeze.startWsBridge', async () => {
-      const { startWsBridge } = await import('./bridge/wsBridgeServer');
-      return startWsBridge(context);
-    }],
-    ['codebreeze.stopWsBridge', async () => {
-      const { stopWsBridge } = await import('./bridge/wsBridgeServer');
-      return stopWsBridge();
-    }],
+    [
+      'codebreeze.startMcpServer',
+      async () => {
+        const { startMcpServer } = await import('./mcp/mcpServer');
+        return startMcpServer(context);
+      },
+    ],
+    [
+      'codebreeze.stopMcpServer',
+      async () => {
+        const { stopMcpServer } = await import('./mcp/mcpServer');
+        return stopMcpServer();
+      },
+    ],
+    [
+      'codebreeze.startWsBridge',
+      async () => {
+        const { startWsBridge } = await import('./bridge/wsBridgeServer');
+        return startWsBridge(context);
+      },
+    ],
+    [
+      'codebreeze.stopWsBridge',
+      async () => {
+        const { stopWsBridge } = await import('./bridge/wsBridgeServer');
+        return stopWsBridge();
+      },
+    ],
     ['codebreeze.applyFromClipboard', () => applyFromClipboard()],
     ['codebreeze.undoLastApply', () => undoLastApply()],
     ['codebreeze.copyFileForAI', (uri?: unknown) => copyFileForAI(uri as vscode.Uri | undefined)],
@@ -119,47 +157,75 @@ export function activate(context: vscode.ExtensionContext): void {
     ['codebreeze.runTestAndCopy', () => runTestAndCopy()],
     ['codebreeze.copyLastBuildLog', () => copyLastBuildLog()],
     ['codebreeze.copyBuildLogFromGitHub', () => copyBuildLogFromGitHub()],
-    ['codebreeze.copyMultipleFilesForAI', (uris?: unknown) => copyMultipleFilesForAI((uris as vscode.Uri[]) || [])],
+    [
+      'codebreeze.copyMultipleFilesForAI',
+      (uris?: unknown) => copyMultipleFilesForAI((uris as vscode.Uri[]) || []),
+    ],
     ['codebreeze.copySmartContext', () => copySmartContext()],
     ['codebreeze.copyProjectMap', () => copyProjectMap()],
     ['codebreeze.manualPaste', () => showManualPastePanel(context)],
     ['codebreeze.openChatPanel', () => openChatPanel()],
     ['codebreeze.openControlPanel', () => openControlPanel(context)],
     ['codebreeze.refreshSidebar', () => sidebarProvider.refresh()],
-    ['codebreeze.toggleAutoWatch', () => {
-      setAutoWatch(!isAutoWatchEnabled());
-      sidebarProvider.refresh();
-    }],
-    ['codebreeze.fixErrorWithAI', async () => {
-      const { fixErrorWithAI } = await import('./commands/fixWithAI');
-      return fixErrorWithAI();
-    }],
-    ['codebreeze.indexWorkspace', async () => {
-      const { indexWorkspace, getIndexedFileCount } = await import('./collect/lspIndexer');
-      await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: 'CodeBreeze: Indexing workspace...' },
-        async () => { await indexWorkspace(true); }
-      );
-      vscode.window.showInformationMessage(`CodeBreeze: Indexed ${getIndexedFileCount()} files`);
-    }],
-    ['codebreeze.copyLspProjectMap', async () => {
-      const { getLspProjectMap } = await import('./collect/lspIndexer');
-      const map = await getLspProjectMap();
-      if (!map) {
-        vscode.window.showInformationMessage('CodeBreeze: No LSP symbols found (try indexing first)');
-        return;
-      }
-      await vscode.env.clipboard.writeText(map);
-      vscode.window.showInformationMessage('CodeBreeze: LSP project map copied to clipboard');
-    }],
-    ['codebreeze.toggleBackgroundAgent', async () => {
-      const { toggleBackgroundAgent } = await import('./bridge/backgroundAgent');
-      toggleBackgroundAgent(context);
-    }],
-    ['codebreeze.triggerInlineCompletion', async () => {
-      const { triggerInlineCompletion } = await import('./providers/inlineCompletionProvider');
-      return triggerInlineCompletion();
-    }],
+    [
+      'codebreeze.toggleAutoWatch',
+      () => {
+        setAutoWatch(!isAutoWatchEnabled());
+        sidebarProvider.refresh();
+      },
+    ],
+    [
+      'codebreeze.fixErrorWithAI',
+      async () => {
+        const { fixErrorWithAI } = await import('./commands/fixWithAI');
+        return fixErrorWithAI();
+      },
+    ],
+    [
+      'codebreeze.indexWorkspace',
+      async () => {
+        const { indexWorkspace, getIndexedFileCount } = await import('./collect/lspIndexer');
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: 'CodeBreeze: Indexing workspace...',
+          },
+          async () => {
+            await indexWorkspace(true);
+          }
+        );
+        vscode.window.showInformationMessage(`CodeBreeze: Indexed ${getIndexedFileCount()} files`);
+      },
+    ],
+    [
+      'codebreeze.copyLspProjectMap',
+      async () => {
+        const { getLspProjectMap } = await import('./collect/lspIndexer');
+        const map = await getLspProjectMap();
+        if (!map) {
+          vscode.window.showInformationMessage(
+            'CodeBreeze: No LSP symbols found (try indexing first)'
+          );
+          return;
+        }
+        await vscode.env.clipboard.writeText(map);
+        vscode.window.showInformationMessage('CodeBreeze: LSP project map copied to clipboard');
+      },
+    ],
+    [
+      'codebreeze.toggleBackgroundAgent',
+      async () => {
+        const { toggleBackgroundAgent } = await import('./bridge/backgroundAgent');
+        toggleBackgroundAgent(context);
+      },
+    ],
+    [
+      'codebreeze.triggerInlineCompletion',
+      async () => {
+        const { triggerInlineCompletion } = await import('./providers/inlineCompletionProvider');
+        return triggerInlineCompletion();
+      },
+    ],
   ];
 
   for (const [id, handler] of commands) {

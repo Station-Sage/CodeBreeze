@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -94,7 +96,17 @@ jobs:
         with:
           script: |
             const { execSync } = require('child_process');
-            const changed = execSync('git diff --name-only origin/dev...HEAD').toString().trim();
+            let changed;
+            try {
+              execSync('git fetch origin dev --depth=1');
+              changed = execSync('git diff --name-only origin/dev...HEAD').toString().trim();
+            } catch (e) {
+              try {
+                changed = execSync('git diff --name-only HEAD~1...HEAD').toString().trim();
+              } catch (e2) {
+                changed = execSync('git diff-tree --no-commit-id --name-only -r HEAD').toString().trim();
+              }
+            }
             const modules = {
               'src/apply/':          '📥 Apply 흐름',
               'src/collect/':        '📤 Collect 흐름',

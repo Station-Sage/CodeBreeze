@@ -31,7 +31,23 @@ const IMPORT_PATTERNS: RegExp[] = [
 ];
 
 /** Known source file extensions for resolving bare imports */
-const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.go', '.rs', '.c', '.cpp', '.h', '.hpp', '.java', '.kt'];
+const SOURCE_EXTENSIONS = [
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+  '.py',
+  '.go',
+  '.rs',
+  '.c',
+  '.cpp',
+  '.h',
+  '.hpp',
+  '.java',
+  '.kt',
+];
 
 /**
  * Extract import paths from a source file's content.
@@ -60,7 +76,11 @@ export function extractImports(content: string): string[] {
  * Resolve an import path to an absolute file path.
  * Tries the import as-is, then with common extensions, then as index file.
  */
-export function resolveImportPath(importPath: string, fromFile: string, _workspaceRoot: string): string | null {
+export function resolveImportPath(
+  importPath: string,
+  fromFile: string,
+  _workspaceRoot: string
+): string | null {
   // Skip node_modules / external packages
   if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
     return null;
@@ -97,7 +117,11 @@ export function resolveImportPath(importPath: string, fromFile: string, _workspa
  * Trace import chain from a file up to a given depth.
  * Returns list of resolved absolute file paths (excluding the root file).
  */
-export function traceImportChain(filePath: string, workspaceRoot: string, maxDepth: number = 2): string[] {
+export function traceImportChain(
+  filePath: string,
+  workspaceRoot: string,
+  maxDepth: number = 2
+): string[] {
   const visited = new Set<string>();
   const result: string[] = [];
 
