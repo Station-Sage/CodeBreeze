@@ -390,7 +390,10 @@
         },
         "codebreeze.applyMode": {
           "type": "string",
-          "enum": ["wholefile", "inline"],
+          "enum": [
+            "wholefile",
+            "inline"
+          ],
           "default": "inline",
           "description": "How to apply code blocks: 'wholefile' replaces entire file, 'inline' applies only changed ranges (partial edit)"
         },
@@ -417,7 +420,10 @@
         },
         "codebreeze.diffPreviewMode": {
           "type": "string",
-          "enum": ["native", "inline"],
+          "enum": [
+            "native",
+            "inline"
+          ],
           "default": "native",
           "description": "Diff preview mode: 'native' uses VS Code's built-in diff editor, 'inline' uses WebView inline diff"
         },
@@ -428,25 +434,38 @@
         },
         "codebreeze.agentLoopAutoApply": {
           "type": "string",
-          "enum": ["preview", "auto", "safe"],
+          "enum": [
+            "preview",
+            "auto",
+            "safe"
+          ],
           "default": "preview",
           "description": "Agent Loop apply mode: 'preview' shows diff editor, 'auto' applies automatically, 'safe' auto-applies only if tests pass"
         },
         "codebreeze.smartContextMode": {
           "type": "string",
-          "enum": ["manual", "auto"],
+          "enum": [
+            "manual",
+            "auto"
+          ],
           "default": "manual",
           "description": "Smart Context mode: 'manual' includes only standard context, 'auto' adds LSP symbols and error references automatically"
         },
         "codebreeze.backgroundAgentMode": {
           "type": "string",
-          "enum": ["off", "bridge"],
+          "enum": [
+            "off",
+            "bridge"
+          ],
           "default": "off",
           "description": "Background Agent mode: 'off' disables auto-monitoring, 'bridge' monitors errors and auto-triggers Agent Loop via browser bridge"
         },
         "codebreeze.backgroundAgentTrigger": {
           "type": "string",
-          "enum": ["auto", "notify"],
+          "enum": [
+            "auto",
+            "notify"
+          ],
           "default": "notify",
           "description": "Background Agent trigger: 'auto' runs Agent Loop immediately on errors, 'notify' asks user first"
         },
@@ -462,7 +481,10 @@
         },
         "codebreeze.inlineCompletionSource": {
           "type": "string",
-          "enum": ["bridge", "mcp"],
+          "enum": [
+            "bridge",
+            "mcp"
+          ],
           "default": "bridge",
           "description": "Source for inline completions: 'bridge' sends to browser AI chat, 'mcp' exposes to MCP clients"
         }
@@ -488,13 +510,12 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
     "@types/diff": "^8.0.0",
-    "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.0",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/parser": "^8.57.1",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
     "@vscode/test-electron": "^2.3.0",
     "@vscode/vsce": "^3.7.1",
     "eslint": "^8.0.0",
